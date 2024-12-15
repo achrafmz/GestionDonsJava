@@ -1,0 +1,14 @@
+<BorderPane xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="DashboardController">
+    <left>
+        <VBox spacing="10.0">
+            <Button text="Gestion Admins" onAction="#handleAdminManagement"/>
+            <Button text="Gestion Dons" onAction="#handleDonationManagement"/>
+            <Button text="Gestion Donateurs" onAction="#handleDonorManagement"/>
+            <Button text="Déconnexion" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <!-- Contenu dynamique en fonction de la section sélectionnée -->
+        <StackPane fx:id="contentPane"/>
+    </center>
+</BorderPane>
