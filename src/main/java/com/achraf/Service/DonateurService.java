@@ -11,24 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DonateurService {
-    public boolean authenticate(String username, String password) {
-        String query = "SELECT * FROM admins WHERE username = ? AND password = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, username);
-            stmt.setString(2, password);
-            ResultSet rs = stmt.executeQuery();
-            return rs.next();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-    public void addDonateur(String name, String email, double montantDonne) {
+
+    public void addDonateur(String nom, String email, double montantDonne) {
         String query = "INSERT INTO donateurs (nom, email, montant_donne) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, name);
+            stmt.setString(1, nom);
             stmt.setString(2, email);
             stmt.setDouble(3, montantDonne);
             stmt.executeUpdate();
@@ -52,6 +40,21 @@ public class DonateurService {
         return donateurs;
     }
 
+    public Donateur getDonateurById(int id) {
+        String query = "SELECT * FROM donateurs WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new Donateur(rs.getInt("id"), rs.getString("nom"), rs.getString("email"), rs.getDouble("montant_donne"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public void deleteDonateur(int id) {
         String query = "DELETE FROM donateurs WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -63,11 +66,11 @@ public class DonateurService {
         }
     }
 
-    public void updateDonateur(int id, String name, String email, double montantDonne) {
-        String query = "UPDATE donateurs SET name = ?, email = ?, montant_donne = ? WHERE id = ?";
+    public void updateDonateur(int id, String nom, String email, double montantDonne) {
+        String query = "UPDATE donateurs SET nom = ?, email = ?, montant_donne = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, name);
+            stmt.setString(1, nom);
             stmt.setString(2, email);
             stmt.setDouble(3, montantDonne);
             stmt.setInt(4, id);

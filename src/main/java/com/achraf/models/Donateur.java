@@ -1,16 +1,18 @@
 package com.achraf.models;
 
-import javafx.beans.property.*;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 
 public class Donateur {
-    private final IntegerProperty id;
-    private final StringProperty name;
-    private final StringProperty email;
-    private final DoubleProperty montantDonne;
+    private final SimpleIntegerProperty id;
+    private final SimpleStringProperty nom;
+    private final SimpleStringProperty email;
+    private final SimpleDoubleProperty montantDonne;
 
-    public Donateur(int id, String name, String email, double montantDonne) {
+    public Donateur(int id, String nom, String email, double montantDonne) {
         this.id = new SimpleIntegerProperty(id);
-        this.name = new SimpleStringProperty(name);
+        this.nom = new SimpleStringProperty(nom);
         this.email = new SimpleStringProperty(email);
         this.montantDonne = new SimpleDoubleProperty(montantDonne);
     }
@@ -19,47 +21,35 @@ public class Donateur {
         return id.get();
     }
 
-    public IntegerProperty idProperty() {
+    public SimpleIntegerProperty idProperty() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id.set(id);
+    public String getNom() {
+        return nom.get();
     }
 
-    public String getName() {
-        return name.get();
-    }
-
-    public StringProperty nameProperty() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name.set(name);
+    public SimpleStringProperty nomProperty() {
+        return nom;
     }
 
     public String getEmail() {
         return email.get();
     }
 
-    public StringProperty emailProperty() {
+    public SimpleStringProperty emailProperty() {
         return email;
-    }
-
-    public void setEmail(String email) {
-        this.email.set(email);
     }
 
     public double getMontantDonne() {
         return montantDonne.get();
     }
 
-    public DoubleProperty montantDonneProperty() {
+    public SimpleDoubleProperty montantDonneProperty() {
         return montantDonne;
     }
 
-    public void setMontantDonne(double montantDonne) {
-        this.montantDonne.set(montantDonne);
+    public String getName() {
+         return nom.get();
     }
 }

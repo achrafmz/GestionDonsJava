@@ -15,8 +15,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 
 import java.time.LocalDate;
+import java.sql.SQLException;
+import java.util.List;
 
 public class DashboardView {
     private Scene scene;
@@ -32,7 +35,6 @@ public class DashboardView {
         donService = new DonService();
         donateurService = new DonateurService();
 
-        // Initialisation des tables
         adminTable = new TableView<>();
         donTable = new TableView<>();
         donateurTable = new TableView<>();
@@ -45,7 +47,17 @@ public class DashboardView {
         Button donButton = new Button("Gérer les Dons");
         Button donateurButton = new Button("Gérer les Donateurs");
 
-        VBox sidebar = new VBox(10, adminButton, donButton, donateurButton);
+        // Boutons d'ajout
+        Button addAdminButton = new Button("Ajouter un Admin");
+        Button addDonButton = new Button("Ajouter un Don");
+        Button addDonateurButton = new Button("Ajouter un Donateur");
+
+        // Actions des boutons d'ajout
+        addAdminButton.setOnAction(e -> showAddAdminDialog());
+        addDonButton.setOnAction(e -> showAddDonDialog());
+        addDonateurButton.setOnAction(e -> showAddDonateurDialog());
+
+        VBox sidebar = new VBox(10, adminButton, addAdminButton, donButton, addDonButton, donateurButton, addDonateurButton);
         sidebar.setAlignment(Pos.CENTER);
         sidebar.setPrefWidth(200);
 
@@ -114,8 +126,8 @@ public class DashboardView {
         TableColumn<Donateur, Integer> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
 
-        TableColumn<Donateur, String> nameColumn = new TableColumn<>("Nom");
-        nameColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
+        TableColumn<Donateur, String> nomColumn = new TableColumn<>("Nom");
+        nomColumn.setCellValueFactory(cellData -> cellData.getValue().nomProperty());
 
         TableColumn<Donateur, String> emailColumn = new TableColumn<>("Email");
         emailColumn.setCellValueFactory(cellData -> cellData.getValue().emailProperty());
@@ -126,9 +138,10 @@ public class DashboardView {
         TableColumn<Donateur, Void> actionColumn = new TableColumn<>("Actions");
         actionColumn.setCellFactory(col -> createActionCell(donateurTable, "donateur"));
 
-        donateurTable.getColumns().addAll(idColumn, nameColumn, emailColumn, montantDonneColumn, actionColumn);
+        donateurTable.getColumns().addAll(idColumn, nomColumn, emailColumn, montantDonneColumn, actionColumn);
         refreshDonateurTable();
     }
+
 
     private <T> TableCell<T, Void> createActionCell(TableView<T> table, String type) {
         return new TableCell<>() {
@@ -200,7 +213,7 @@ public class DashboardView {
 
         addButton.setOnAction(e -> {
             String username = usernameField.getText();
-            String password = usernameField.getText();
+            String password = passwordField.getText();
             adminService.addAdmin(username, password);
             refreshAdminTable();
         });
@@ -235,20 +248,50 @@ public class DashboardView {
     }
 
     private void showAddDonDialog() {
-        TextField donateurIdField = new TextField();
+        ComboBox<Donateur> donateurComboBox = new ComboBox<>();
+        donateurComboBox.setItems(FXCollections.observableArrayList(donateurService.getDonateurs()));
+        donateurComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Donateur donateur) {
+                return donateur != null ? donateur.getName() + " (" + donateur.getId() + ")" : "";
+            }
+
+            @Override
+            public Donateur fromString(String string) {
+                return null;
+            }
+        });
+
         TextField montantField = new TextField();
         DatePicker dateDonPicker = new DatePicker();
         Button addButton = new Button("Ajouter");
 
         addButton.setOnAction(e -> {
-            int donateurId = Integer.parseInt(donateurIdField.getText());
-            double montant = Double.parseDouble(montantField.getText());
-            LocalDate dateDon = dateDonPicker.getValue();
-            donService.addDon(donateurId, montant, dateDon);
-            refreshDonTable();
+            try {
+                Donateur selectedDonateur = donateurComboBox.getValue();
+                if (selectedDonateur == null) {
+                    showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez sélectionner un donateur.");
+                    return;
+                }
+
+                double montant = Double.parseDouble(montantField.getText().trim());
+                LocalDate dateDon = dateDonPicker.getValue();
+
+                if (dateDon == null) {
+                    showAlert(Alert.AlertType.ERROR, "Erreur", "La date de don est obligatoire.");
+                    return;
+                }
+
+                donService.addDon(selectedDonateur.getId(), montant, dateDon);
+                refreshDonTable();
+            } catch (NumberFormatException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
+            } catch (SQLException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", ex.getMessage());
+            }
         });
 
-        VBox vbox = new VBox(10, new Label("Donateur ID:"), donateurIdField, new Label("Montant:"), montantField, new Label("Date de Don:"), dateDonPicker, addButton);
+        VBox vbox = new VBox(10, new Label("Donateur:"), donateurComboBox, new Label("Montant:"), montantField, new Label("Date de Don:"), dateDonPicker, addButton);
         Scene dialogScene = new Scene(vbox, 300, 250);
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Ajouter un Don");
@@ -285,11 +328,21 @@ public class DashboardView {
         Button addButton = new Button("Ajouter");
 
         addButton.setOnAction(e -> {
-            String name = nameField.getText();
-            String email = emailField.getText();
-            double montantDonne = Double.parseDouble(montantDonneField.getText());
-            donateurService.addDonateur(name, email, montantDonne);
-            refreshDonateurTable();
+            try {
+                String name = nameField.getText().trim();
+                String email = emailField.getText().trim();
+                double montantDonne = Double.parseDouble(montantDonneField.getText().trim());
+
+                if (name.isEmpty() || email.isEmpty()) {
+                    showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
+                    return;
+                }
+
+                donateurService.addDonateur(name, email, montantDonne);
+                refreshDonateurTable();
+            } catch (NumberFormatException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
+            }
         });
 
         VBox vbox = new VBox(10, new Label("Nom:"), nameField, new Label("Email:"), emailField, new Label("Montant Donné:"), montantDonneField, addButton);
@@ -301,24 +354,44 @@ public class DashboardView {
     }
 
     private void showUpdateDonateurDialog(Donateur donateur) {
-        TextField nameField = new TextField(donateur.getName());
+        TextField nomField = new TextField(donateur.getNom());
         TextField emailField = new TextField(donateur.getEmail());
         TextField montantDonneField = new TextField(String.valueOf(donateur.getMontantDonne()));
         Button updateButton = new Button("Modifier");
 
         updateButton.setOnAction(e -> {
-            String name = nameField.getText();
-            String email = emailField.getText();
-            double montantDonne = Double.parseDouble(montantDonneField.getText());
-            donateurService.updateDonateur(donateur.getId(), name, email, montantDonne);
-            refreshDonateurTable();
+            try {
+                String nom = nomField.getText().trim();
+                String email = emailField.getText().trim();
+                double montantDonne = Double.parseDouble(montantDonneField.getText().trim());
+
+                if (nom.isEmpty() || email.isEmpty()) {
+                    showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
+                    return;
+                }
+
+                donateurService.updateDonateur(donateur.getId(), nom, email, montantDonne);
+                refreshDonateurTable();
+            } catch (NumberFormatException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
+            }
         });
 
-        VBox vbox = new VBox(10, new Label("Nom:"), nameField, new Label("Email:"), emailField, new Label("Montant Donné:"), montantDonneField, updateButton);
+        VBox vbox = new VBox(10, new Label("Nom:"), nomField, new Label("Email:"), emailField, new Label("Montant Donné:"), montantDonneField, updateButton);
         Scene dialogScene = new Scene(vbox, 300, 250);
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Modifier Donateur");
         dialogStage.setScene(dialogScene);
         dialogStage.show();
+    }
+
+
+
+    private void showAlert(Alert.AlertType alertType, String title, String message) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
