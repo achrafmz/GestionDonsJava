@@ -66,7 +66,7 @@ public class DonateurService {
         }
     }
 
-    public void updateDonateur(int id, String nom, String email, double montantDonne) {
+    public void updateDonateur(int id, String nom, String email, double montantDonne) throws SQLException {
         String query = "UPDATE donateurs SET nom = ?, email = ?, montant_donne = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -75,8 +75,7 @@ public class DonateurService {
             stmt.setDouble(3, montantDonne);
             stmt.setInt(4, id);
             stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
+
 }

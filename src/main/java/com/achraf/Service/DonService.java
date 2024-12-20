@@ -72,7 +72,7 @@ public class DonService {
         }
     }
 
-    public void updateDon(int id, int donateurId, double montant, LocalDate dateDon) {
+    public void updateDon(int id, int donateurId, double montant, LocalDate dateDon) throws SQLException {
         String query = "UPDATE dons SET donateur_id = ?, montant = ?, date_don = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -81,8 +81,7 @@ public class DonService {
             stmt.setDate(3, java.sql.Date.valueOf(dateDon));
             stmt.setInt(4, id);
             stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
+
 }

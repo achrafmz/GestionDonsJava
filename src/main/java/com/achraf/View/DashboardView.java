@@ -8,21 +8,22 @@ import com.achraf.services.DonService;
 import com.achraf.services.DonateurService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
-import java.time.LocalDate;
 import java.sql.SQLException;
-import java.util.List;
+import java.time.LocalDate;
 
 public class DashboardView {
     private Scene scene;
+    private BorderPane mainPane;
+    private VBox sidebar;
+    private HBox cardBox;
     private TableView<Admin> adminTable;
     private TableView<Don> donTable;
     private TableView<Donateur> donateurTable;
@@ -49,40 +50,89 @@ public class DashboardView {
 
         // Boutons d'ajout
         Button addAdminButton = new Button("Ajouter un Admin");
+        addAdminButton.setVisible(false);
         Button addDonButton = new Button("Ajouter un Don");
+        addDonButton.setVisible(false);
         Button addDonateurButton = new Button("Ajouter un Donateur");
+        addDonateurButton.setVisible(false);
 
         // Actions des boutons d'ajout
         addAdminButton.setOnAction(e -> showAddAdminDialog());
         addDonButton.setOnAction(e -> showAddDonDialog());
         addDonateurButton.setOnAction(e -> showAddDonateurDialog());
 
-        VBox sidebar = new VBox(10, adminButton, addAdminButton, donButton, addDonButton, donateurButton, addDonateurButton);
+        // Boutons de navigation
+        Button dashboardButton = new Button("Tableau de Bord");
+        Button logoutButton = new Button("Déconnecter");
+
+        dashboardButton.setOnAction(e -> mainPane.setCenter(cardBox));
+        logoutButton.setOnAction(e -> handleLogout(stage));
+
+        sidebar = new VBox(10, dashboardButton, adminButton, addAdminButton, donButton, addDonButton, donateurButton, addDonateurButton, logoutButton);
         sidebar.setAlignment(Pos.CENTER);
         sidebar.setPrefWidth(200);
+        sidebar.setPadding(new Insets(10));
+        sidebar.setStyle("-fx-background-color: #2f4f4f; -fx-text-fill: white;");
 
-        BorderPane mainPane = new BorderPane();
+        // Cards
+        cardBox = new HBox(20);
+        cardBox.setAlignment(Pos.CENTER);
+        cardBox.setPadding(new Insets(20));
+        createDashboardCards();
+
+        mainPane = new BorderPane();
         mainPane.setLeft(sidebar);
-        mainPane.setCenter(adminTable); // Par défaut, afficher la table des admins
+        mainPane.setCenter(cardBox); // Par défaut, afficher les cards
 
-        scene = new Scene(mainPane, 800, 600);
+        scene = new Scene(mainPane, 1000, 600);
 
         adminButton.setOnAction(e -> {
             refreshAdminTable();
             mainPane.setCenter(adminTable);
+            addAdminButton.setVisible(true);
+            addDonButton.setVisible(false);
+            addDonateurButton.setVisible(false);
         });
         donButton.setOnAction(e -> {
             refreshDonTable();
             mainPane.setCenter(donTable);
+            addAdminButton.setVisible(false);
+            addDonButton.setVisible(true);
+            addDonateurButton.setVisible(false);
         });
         donateurButton.setOnAction(e -> {
             refreshDonateurTable();
             mainPane.setCenter(donateurTable);
+            addAdminButton.setVisible(false);
+            addDonButton.setVisible(false);
+            addDonateurButton.setVisible(true);
         });
+
+        stage.setScene(scene);
+        stage.show();
     }
 
     public Scene getScene() {
         return scene;
+    }
+
+    private void createDashboardCards() {
+        Label donateursCount = new Label("Nombre de Donateurs: " + donateurService.getDonateurs().size());
+        donateursCount.setStyle("-fx-font-size: 24; -fx-text-fill: #ffffff;");
+        VBox donateurCard = new VBox(donateursCount);
+        donateurCard.setAlignment(Pos.CENTER);
+        donateurCard.setPadding(new Insets(20));
+        donateurCard.setStyle("-fx-background-color: #4682b4; -fx-background-radius: 10; -fx-padding: 20;");
+
+        double totalDons = donService.getDons().stream().mapToDouble(Don::getMontant).sum();
+        Label donsSum = new Label("Montant Total des Dons: " + totalDons);
+        donsSum.setStyle("-fx-font-size: 24; -fx-text-fill: #ffffff;");
+        VBox donsCard = new VBox(donsSum);
+        donsCard.setAlignment(Pos.CENTER);
+        donsCard.setPadding(new Insets(20));
+        donsCard.setStyle("-fx-background-color: #32cd32; -fx-background-radius: 10; -fx-padding: 20;");
+
+        cardBox.getChildren().addAll(donateurCard, donsCard);
     }
 
     private void createAdminTable() {
@@ -142,7 +192,6 @@ public class DashboardView {
         refreshDonateurTable();
     }
 
-
     private <T> TableCell<T, Void> createActionCell(TableView<T> table, String type) {
         return new TableCell<>() {
             private final Button deleteButton = new Button("Supprimer");
@@ -162,7 +211,6 @@ public class DashboardView {
                         refreshDonateurTable();
                     }
                 });
-
                 updateButton.setOnAction(e -> {
                     T item = getTableView().getItems().get(getIndex());
                     if ("admin".equals(type) && item instanceof Admin) {
@@ -253,7 +301,7 @@ public class DashboardView {
         donateurComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Donateur donateur) {
-                return donateur != null ? donateur.getName() + " (" + donateur.getId() + ")" : "";
+                return donateur != null ? donateur.getNom() + " (" + donateur.getId() + ")" : "";
             }
 
             @Override
@@ -287,7 +335,7 @@ public class DashboardView {
             } catch (NumberFormatException ex) {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
             } catch (SQLException ex) {
-                showAlert(Alert.AlertType.ERROR, "Erreur", ex.getMessage());
+                showAlert(Alert.AlertType.ERROR, "Erreur de la base de données", ex.getMessage());
             }
         });
 
@@ -300,20 +348,51 @@ public class DashboardView {
     }
 
     private void showUpdateDonDialog(Don don) {
-        TextField donateurIdField = new TextField(String.valueOf(don.getDonateurId()));
+        ComboBox<Donateur> donateurComboBox = new ComboBox<>();
+        donateurComboBox.setItems(FXCollections.observableArrayList(donateurService.getDonateurs()));
+        donateurComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Donateur donateur) {
+                return donateur != null ? donateur.getNom() + " (" + donateur.getId() + ")" : "";
+            }
+
+            @Override
+            public Donateur fromString(String string) {
+                return null;
+            }
+        });
+        donateurComboBox.getSelectionModel().select(donateurService.getDonateurById(don.getDonateurId()));
+
         TextField montantField = new TextField(String.valueOf(don.getMontant()));
         DatePicker dateDonPicker = new DatePicker(don.getDateDon());
         Button updateButton = new Button("Modifier");
 
         updateButton.setOnAction(e -> {
-            int donateurId = Integer.parseInt(donateurIdField.getText());
-            double montant = Double.parseDouble(montantField.getText());
-            LocalDate dateDon = dateDonPicker.getValue();
-            donService.updateDon(don.getId(), donateurId, montant, dateDon);
-            refreshDonTable();
+            try {
+                Donateur selectedDonateur = donateurComboBox.getValue();
+                if (selectedDonateur == null) {
+                    showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez sélectionner un donateur.");
+                    return;
+                }
+
+                double montant = Double.parseDouble(montantField.getText().trim());
+                LocalDate dateDon = dateDonPicker.getValue();
+
+                if (dateDon == null) {
+                    showAlert(Alert.AlertType.ERROR, "Erreur", "La date de don est obligatoire.");
+                    return;
+                }
+
+                donService.updateDon(don.getId(), selectedDonateur.getId(), montant, dateDon);
+                refreshDonTable();
+            } catch (NumberFormatException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
+            } catch (SQLException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur de la base de données", ex.getMessage());
+            }
         });
 
-        VBox vbox = new VBox(10, new Label("Donateur ID:"), donateurIdField, new Label("Montant:"), montantField, new Label("Date de Don:"), dateDonPicker, updateButton);
+        VBox vbox = new VBox(10, new Label("Donateur:"), donateurComboBox, new Label("Montant:"), montantField, new Label("Date de Don:"), dateDonPicker, updateButton);
         Scene dialogScene = new Scene(vbox, 300, 250);
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Modifier Don");
@@ -322,30 +401,30 @@ public class DashboardView {
     }
 
     private void showAddDonateurDialog() {
-        TextField nameField = new TextField();
+        TextField nomField = new TextField();
         TextField emailField = new TextField();
         TextField montantDonneField = new TextField();
         Button addButton = new Button("Ajouter");
 
         addButton.setOnAction(e -> {
             try {
-                String name = nameField.getText().trim();
+                String nom = nomField.getText().trim();
                 String email = emailField.getText().trim();
                 double montantDonne = Double.parseDouble(montantDonneField.getText().trim());
 
-                if (name.isEmpty() || email.isEmpty()) {
+                if (nom.isEmpty() || email.isEmpty()) {
                     showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
                     return;
                 }
 
-                donateurService.addDonateur(name, email, montantDonne);
+                donateurService.addDonateur(nom, email, montantDonne);
                 refreshDonateurTable();
             } catch (NumberFormatException ex) {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
             }
         });
 
-        VBox vbox = new VBox(10, new Label("Nom:"), nameField, new Label("Email:"), emailField, new Label("Montant Donné:"), montantDonneField, addButton);
+        VBox vbox = new VBox(10, new Label("Nom:"), nomField, new Label("Email:"), emailField, new Label("Montant Donné:"), montantDonneField, addButton);
         Scene dialogScene = new Scene(vbox, 300, 250);
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Ajouter un Donateur");
@@ -374,6 +453,8 @@ public class DashboardView {
                 refreshDonateurTable();
             } catch (NumberFormatException ex) {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
+            } catch (SQLException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur de la base de données", ex.getMessage());
             }
         });
 
@@ -385,13 +466,16 @@ public class DashboardView {
         dialogStage.show();
     }
 
-
-
     private void showAlert(Alert.AlertType alertType, String title, String message) {
         Alert alert = new Alert(alertType);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void handleLogout(Stage stage) {
+        LoginView loginView = new LoginView(stage);
+        stage.setScene(loginView.getScene());
     }
 }
