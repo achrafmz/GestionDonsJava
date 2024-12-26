@@ -19,7 +19,19 @@ public class Beneficiaire {
         this.adresse = new SimpleStringProperty();
     }
 
-    // Getters and Setters
+    public Beneficiaire(int id, String nom, String prenom, String email, String telephone, String adresse) {
+        this.id = new SimpleIntegerProperty(id);
+        this.nom = new SimpleStringProperty(nom);
+        this.prenom = new SimpleStringProperty(prenom);
+        this.email = new SimpleStringProperty(email);
+        this.telephone = new SimpleStringProperty(telephone);
+        this.adresse = new SimpleStringProperty(adresse);
+    }
+
+    public Beneficiaire(int id, String nom, String contact, String besoins) {
+    }
+
+    // Getters et setters
 
     public int getId() {
         return id.get();

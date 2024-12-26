@@ -16,6 +16,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
+import java.sql.SQLException;
+
 public class LoginView {
     private Scene scene;
     private AdminService adminService;
@@ -42,7 +44,12 @@ public class LoginView {
             String username = usernameField.getText();
             String password = passwordField.getText();
             if (adminService.authenticate(username, password)) {
-                DashboardView dashboardView = new DashboardView(stage);
+                DashboardView dashboardView = null;
+                try {
+                    dashboardView = new DashboardView(stage);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
                 stage.setScene(dashboardView.getScene());
             } else {
                 showAlert("Informations d'identification invalides");

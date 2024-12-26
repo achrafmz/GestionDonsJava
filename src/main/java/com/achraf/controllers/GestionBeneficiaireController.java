@@ -18,7 +18,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Optional;
 
-public class DashboardController {
+public class GestionBeneficiaireController {
 
     @FXML
     private VBox mainContent;

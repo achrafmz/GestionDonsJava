@@ -13,6 +13,8 @@ import java.util.List;
 
 public class DonService {
 
+    // Autres méthodes existantes...
+
     public void addDon(int donateurId, double montant, LocalDate dateDon) throws SQLException {
         if (!donateurExists(donateurId)) {
             throw new SQLException("Le donateur avec l'ID " + donateurId + " n'existe pas.");
@@ -26,6 +28,11 @@ public class DonService {
             stmt.setDate(3, java.sql.Date.valueOf(dateDon));
             stmt.executeUpdate();
         }
+
+        // Mise à jour du total des dons
+        double totalDons = getTotalDons();
+        totalDons += montant;
+        updateTotalDons(totalDons);
     }
 
     public boolean donateurExists(int donateurId) {
@@ -38,6 +45,28 @@ public class DonService {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public double getTotalDons() throws SQLException {
+        String query = "SELECT montant FROM total_dons WHERE id = 1";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getDouble("montant");
+            } else {
+                throw new SQLException("Erreur : Total des dons non trouvé.");
+            }
+        }
+    }
+
+    public void updateTotalDons(double totalDons) throws SQLException {
+        String query = "UPDATE total_dons SET montant = ? WHERE id = 1";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setDouble(1, totalDons);
+            stmt.executeUpdate();
         }
     }
 
@@ -83,5 +112,4 @@ public class DonService {
             stmt.executeUpdate();
         }
     }
-
 }
