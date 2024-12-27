@@ -599,15 +599,17 @@ public class DashboardView {
             try {
                 double totalDons = donService.getTotalDons();
                 if (totalDons >= montant) {
-                    // Ajouter le don directement dans l'historique
+                    System.out.println("Total des dons suffisant pour attribuer le don.");
+                    // Ajouter le don uniquement dans l'historique
                     int donId = 1; // ID fictif pour le don (n'est plus utilisé pour `dons`)
 
                     donBeneficiaireService.attribuerDon(donId, beneficiaire.getId(), montant, LocalDate.now());
                     donBeneficiaireService.enregistrerHistoriqueDon(donId, beneficiaire.getId(), montant, LocalDate.now());
 
                     // Mise à jour du total des dons
-                    totalDons -= montant;
-                    donService.updateTotalDons(totalDons);
+                    donService.updateTotalDons(totalDons - montant);
+
+                    System.out.println("Mise à jour du total des dons après attribution.");
 
                     Alert alert = new Alert(Alert.AlertType.INFORMATION, "Don attribué avec succès et enregistré dans l'historique des dons!", ButtonType.OK);
                     alert.showAndWait();
@@ -622,6 +624,10 @@ public class DashboardView {
             }
         }
     }
+
+
+
+
 
 
 
