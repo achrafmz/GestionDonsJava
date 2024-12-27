@@ -1,0 +1,6 @@
+Rapport de l'Opération de Don
+-----------------------------------
+ID du Don: 1
+Bénéficiaire: BENNANIEEE
+Date d'Attribution: 2024-12-26
+Montant: 26.0

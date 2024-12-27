@@ -8,13 +8,15 @@ public class HistoriqueDon {
     private final IntegerProperty id;
     private final IntegerProperty donId;
     private final IntegerProperty beneficiaireId;
+    private final StringProperty beneficiaireNom;
     private final ObjectProperty<LocalDate> dateAttribution;
     private final DoubleProperty montant;
 
-    public HistoriqueDon(int id, int donId, int beneficiaireId, LocalDate dateAttribution, double montant) {
+    public HistoriqueDon(int id, int donId, int beneficiaireId, String beneficiaireNom, LocalDate dateAttribution, double montant) {
         this.id = new SimpleIntegerProperty(id);
         this.donId = new SimpleIntegerProperty(donId);
         this.beneficiaireId = new SimpleIntegerProperty(beneficiaireId);
+        this.beneficiaireNom = new SimpleStringProperty(beneficiaireNom);
         this.dateAttribution = new SimpleObjectProperty<>(dateAttribution);
         this.montant = new SimpleDoubleProperty(montant);
     }
@@ -41,6 +43,14 @@ public class HistoriqueDon {
 
     public IntegerProperty beneficiaireIdProperty() {
         return beneficiaireId;
+    }
+
+    public String getBeneficiaireNom() {
+        return beneficiaireNom.get();
+    }
+
+    public StringProperty beneficiaireNomProperty() {
+        return beneficiaireNom;
     }
 
     public LocalDate getDateAttribution() {

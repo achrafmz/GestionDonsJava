@@ -25,19 +25,21 @@ public class DonBeneficiaireService {
             System.out.println("Don ajouté avec succès dans l'historique.");
         } catch (SQLException e) {
             e.printStackTrace();
-            throw e; // Relance l'exception après log
+            throw e;
         }
     }
 
     public void enregistrerHistoriqueDon(int donId, int beneficiaireId, double montant, LocalDate dateAttribution) throws SQLException {
-        
+
     }
 
 
 
     public List<HistoriqueDon> getHistoriqueDons() {
         List<HistoriqueDon> historiqueDons = new ArrayList<>();
-        String query = "SELECT * FROM historique_dons";
+        String query = "SELECT hd.id, hd.don_id, hd.beneficiaire_id, b.nom AS beneficiaire_nom, hd.date_attribution, hd.montant " +
+                "FROM historique_dons hd " +
+                "JOIN beneficiaires b ON hd.beneficiaire_id = b.id";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
@@ -45,15 +47,17 @@ public class DonBeneficiaireService {
                 int id = rs.getInt("id");
                 int donId = rs.getInt("don_id");
                 int beneficiaireId = rs.getInt("beneficiaire_id");
+                String beneficiaireNom = rs.getString("beneficiaire_nom");
                 LocalDate dateAttribution = rs.getDate("date_attribution").toLocalDate();
                 double montant = rs.getDouble("montant");
-                historiqueDons.add(new HistoriqueDon(id, donId, beneficiaireId, dateAttribution, montant));
+                historiqueDons.add(new HistoriqueDon(id, donId, beneficiaireId, beneficiaireNom, dateAttribution, montant));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return historiqueDons;
     }
+
     private boolean donExistsInHistorique(int donId, int beneficiaireId, LocalDate dateAttribution) throws SQLException {
         String query = "SELECT 1 FROM historique_dons WHERE don_id = ? AND beneficiaire_id = ? AND date_attribution = ?";
         try (Connection conn = DBConnection.getConnection();

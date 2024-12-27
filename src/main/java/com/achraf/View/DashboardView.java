@@ -16,10 +16,22 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
+
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+
+import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class DashboardView {
     private Scene scene;
@@ -703,6 +715,8 @@ public class DashboardView {
         };
     }
 
+
+
     private void createHistoriqueTable() {
         historiqueTable = new TableView<>();
 
@@ -712,8 +726,8 @@ public class DashboardView {
         TableColumn<HistoriqueDon, Integer> donIdColumn = new TableColumn<>("Don ID");
         donIdColumn.setCellValueFactory(cellData -> cellData.getValue().donIdProperty().asObject());
 
-        TableColumn<HistoriqueDon, Integer> beneficiaireIdColumn = new TableColumn<>("Bénéficiaire ID");
-        beneficiaireIdColumn.setCellValueFactory(cellData -> cellData.getValue().beneficiaireIdProperty().asObject());
+        TableColumn<HistoriqueDon, String> beneficiaireNomColumn = new TableColumn<>("Bénéficiaire");
+        beneficiaireNomColumn.setCellValueFactory(cellData -> cellData.getValue().beneficiaireNomProperty());
 
         TableColumn<HistoriqueDon, LocalDate> dateAttributionColumn = new TableColumn<>("Date d'Attribution");
         dateAttributionColumn.setCellValueFactory(cellData -> cellData.getValue().dateAttributionProperty());
@@ -721,6 +735,119 @@ public class DashboardView {
         TableColumn<HistoriqueDon, Double> montantColumn = new TableColumn<>("Montant");
         montantColumn.setCellValueFactory(cellData -> cellData.getValue().montantProperty().asObject());
 
-        historiqueTable.getColumns().addAll(idColumn, donIdColumn, beneficiaireIdColumn, dateAttributionColumn, montantColumn);
+        TableColumn<HistoriqueDon, Void> actionColumn = new TableColumn<>("Actions");
+        actionColumn.setCellFactory(col -> new TableCell<>() {
+            private final Button viewReportButton = new Button("Voir/Télécharger Rapport");
+
+            {
+                viewReportButton.setOnAction(event -> {
+                    HistoriqueDon historiqueDon = getTableView().getItems().get(getIndex());
+                    generateOperationReport(historiqueDon);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(viewReportButton);
+                }
+            }
+        });
+
+        historiqueTable.getColumns().addAll(idColumn, donIdColumn, beneficiaireNomColumn, dateAttributionColumn, montantColumn, actionColumn);
     }
+
+    private void generateOperationReport(HistoriqueDon historiqueDon) {
+        System.out.println("Début de la génération du rapport pour l'ID du don: " + historiqueDon.getDonId());
+
+        // Création du document Word
+        XWPFDocument document = new XWPFDocument();
+
+        // Ajout de l'en-tête du rapport
+        XWPFParagraph header = document.createParagraph();
+        header.setAlignment(ParagraphAlignment.CENTER);
+        XWPFRun run = header.createRun();
+        run.setText("Association NAJD");
+        run.setBold(true);
+        run.setFontSize(16);
+        run.addBreak();
+
+        run = header.createRun();
+        run.setText("Adresse :  Rue ZERKTOUNI , Marrakech, Maroc");
+        run.setFontSize(12);
+        run.addBreak();
+        run = header.createRun();
+        run.setText("0655554443");
+        run.setFontSize(12);
+        run.addBreak();
+        run.addBreak();
+
+        // Ajout du titre du rapport
+        XWPFParagraph title = document.createParagraph();
+        title.setAlignment(ParagraphAlignment.CENTER);
+        run = title.createRun();
+        run.setText("Rapport de l'Opération de Don");
+        run.setBold(true);
+        run.setFontSize(14);
+        run.addBreak();
+        run.addBreak();
+
+        // Ajout des détails de l'opération de don
+        XWPFParagraph paragraph = document.createParagraph();
+        run = paragraph.createRun();
+        run.setText("Détails de l'Opération:");
+        run.setBold(true);
+        run.setFontSize(12);
+        run.addBreak();
+
+        run = paragraph.createRun();
+        run.setText("ID du Don: " + historiqueDon.getDonId());
+        run.addBreak();
+
+        run.setText("Bénéficiaire: " + historiqueDon.getBeneficiaireNom());
+        run.addBreak();
+
+        run.setText("Date d'Attribution: " + historiqueDon.getDateAttribution());
+        run.addBreak();
+
+        run.setText("Montant: " + historiqueDon.getMontant());
+        run.addBreak();
+
+        // Chemin de sauvegarde du rapport dans le répertoire Téléchargements
+        String userHome = System.getProperty("user.home");
+        Path downloadPath = Paths.get(userHome, "Downloads");
+
+        // Vérifier et créer le répertoire Téléchargements s'il n'existe pas
+        if (!Files.exists(downloadPath)) {
+            try {
+                Files.createDirectories(downloadPath);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Erreur lors de la création du répertoire Téléchargements.", ButtonType.OK);
+                alert.showAndWait();
+                return;
+            }
+        }
+
+        String filePath = downloadPath.resolve("rapport_don_" + historiqueDon.getId() + ".docx").toString();
+        System.out.println("Chemin de sauvegarde du rapport: " + filePath);
+
+        // Sauvegarder le rapport dans un fichier
+        try (FileOutputStream out = new FileOutputStream(filePath)) {
+            document.write(out);
+            System.out.println("Rapport généré et sauvegardé avec succès.");
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Rapport généré avec succès : " + filePath, ButtonType.OK);
+            alert.showAndWait();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Erreur lors de la génération du rapport.", ButtonType.OK);
+            alert.showAndWait();
+        }
+    }
+
+
+
 }
