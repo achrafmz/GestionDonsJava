@@ -6,6 +6,9 @@
     import org.apache.pdfbox.pdmodel.PDPageContentStream;
     import org.apache.pdfbox.pdmodel.font.PDType1Font;
     import javafx.beans.property.SimpleStringProperty;
+    import javafx.scene.control.Button;
+    import javafx.scene.control.Label;
+    import javafx.scene.control.TextField;
 
 import com.achraf.models.*;
 import com.achraf.services.AdminService;
@@ -23,7 +26,8 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
-import java.io.FileOutputStream;
+    import java.awt.*;
+    import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -225,58 +229,7 @@ import java.nio.file.Paths;
             refreshAdminTable();
         }
 
-        private void createDonTable() {
-            TableColumn<Don, Integer> idColumn = new TableColumn<>("ID");
-            idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
-
-            TableColumn<Don, String> donateurNomColumn = new TableColumn<>("Nom du Donateur");
-            donateurNomColumn.setCellValueFactory(cellData -> {
-                Donateur donateur = getDonateur(cellData.getValue().getDonateurId());
-                return donateur != null ? new SimpleStringProperty(donateur.getNom()) : new SimpleStringProperty("Erreur");
-            });
-
-            TableColumn<Don, Double> montantColumn = new TableColumn<>("Montant");
-            montantColumn.setCellValueFactory(cellData -> cellData.getValue().montantProperty().asObject());
-
-            TableColumn<Don, LocalDate> dateDonColumn = new TableColumn<>("Date de Don");
-            dateDonColumn.setCellValueFactory(cellData -> cellData.getValue().dateDonProperty());
-
-            TableColumn<Don, Void> actionColumn = new TableColumn<>("Actions");
-            actionColumn.setCellFactory(col -> new TableCell<>() {
-                private final Button deleteButton = new Button("Supprimer");
-                private final Button recuButton = new Button("Télécharger Reçu");
-
-                {
-                    deleteButton.setOnAction(event -> {
-                        Don don = getTableView().getItems().get(getIndex());
-                        deleteDon(don);
-                    });
-
-                    recuButton.setOnAction(event -> {
-                        Don don = getTableView().getItems().get(getIndex());
-                        generateRecuPDF(don);
-                    });
-
-                    deleteButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
-                    recuButton.setStyle("-fx-background-color: blue; -fx-text-fill: white;");
-                }
-
-                @Override
-                protected void updateItem(Void item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty) {
-                        setGraphic(null);
-                    } else {
-                        HBox buttons = new HBox(10, deleteButton, recuButton);
-                        setGraphic(buttons);
-                    }
-                }
-            });
-
-            donTable.getColumns().addAll(idColumn, donateurNomColumn, montantColumn, dateDonColumn, actionColumn);
-            refreshDonTable();
-        }
-
+        GIT AD
 
         private Donateur getDonateur(int donateurId) {
             return donateurService.getDonateurById(donateurId);
@@ -466,7 +419,7 @@ import java.nio.file.Paths;
             donateurComboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(Donateur donateur) {
-                    return donateur != null ? donateur.getNom() + " (" + donateur.getId() + ")" : "";
+                    return donateur != null ? donateur.getNom() + " (" + donateur.getEmail() + ")" : "";
                 }
 
                 @Override
@@ -476,7 +429,6 @@ import java.nio.file.Paths;
             });
 
             TextField montantField = new TextField();
-            DatePicker dateDonPicker = new DatePicker();
             Button addButton = new Button("Ajouter");
 
             addButton.setOnAction(e -> {
@@ -488,14 +440,8 @@ import java.nio.file.Paths;
                     }
 
                     double montant = Double.parseDouble(montantField.getText().trim());
-                    LocalDate dateDon = dateDonPicker.getValue();
 
-                    if (dateDon == null) {
-                        showAlert(Alert.AlertType.ERROR, "Erreur", "La date de don est obligatoire.");
-                        return;
-                    }
-
-                    donService.addDon(selectedDonateur.getId(), montant, dateDon);
+                    donService.addDon(selectedDonateur.getId(), montant);
                     refreshDonTable();
                 } catch (NumberFormatException ex) {
                     showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
@@ -504,13 +450,14 @@ import java.nio.file.Paths;
                 }
             });
 
-            VBox vbox = new VBox(10, new Label("Donateur:"), donateurComboBox, new Label("Montant:"), montantField, new Label("Date de Don:"), dateDonPicker, addButton);
+            VBox vbox = new VBox(10, new Label("Donateur:"), donateurComboBox, new Label("Montant:"), montantField, addButton);
             Scene dialogScene = new Scene(vbox, 300, 250);
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Ajouter un Don");
             dialogStage.setScene(dialogScene);
             dialogStage.show();
         }
+
 
         private void showUpdateDonDialog(Don don) {
             ComboBox<Donateur> donateurComboBox = new ComboBox<>();
@@ -566,36 +513,37 @@ import java.nio.file.Paths;
         }
 
         private void showAddDonateurDialog() {
-            TextField nomField = new TextField();
-            TextField emailField = new TextField();
-            TextField montantDonneField = new TextField();
-            Button addButton = new Button("Ajouter");
+            javafx.scene.control.TextField nomField = new javafx.scene.control.TextField();
+            javafx.scene.control.TextField emailField = new javafx.scene.control.TextField();
+            javafx.scene.control.Button addButton = new javafx.scene.control.Button("Ajouter");
 
             addButton.setOnAction(e -> {
+                String nom = nomField.getText().trim();
+                String email = emailField.getText().trim();
+
+                if (nom.isEmpty() || email.isEmpty()) {
+                    showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
+                    return;
+                }
+
                 try {
-                    String nom = nomField.getText().trim();
-                    String email = emailField.getText().trim();
-                    double montantDonne = Double.parseDouble(montantDonneField.getText().trim());
-
-                    if (nom.isEmpty() || email.isEmpty()) {
-                        showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
-                        return;
-                    }
-
-                    donateurService.addDonateur(nom, email, montantDonne);
+                    donateurService.addDonateur(nom, email);
                     refreshDonateurTable();
-                } catch (NumberFormatException ex) {
-                    showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
+                } catch (SQLException ex) {
+                    showAlert(Alert.AlertType.ERROR, "Erreur de la base de données", ex.getMessage());
                 }
             });
 
-            VBox vbox = new VBox(10, new Label("Nom:"), nomField, new Label("Email:"), emailField, new Label("Montant Donné:"), montantDonneField, addButton);
+            VBox vbox = new VBox(10, new javafx.scene.control.Label("Nom:"), nomField, new javafx.scene.control.Label("Email:"), emailField, addButton);
             Scene dialogScene = new Scene(vbox, 300, 250);
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Ajouter un Donateur");
             dialogStage.setScene(dialogScene);
             dialogStage.show();
         }
+
+
+
 
         private void showUpdateDonateurDialog(Donateur donateur) {
             TextField nomField = new TextField(donateur.getNom());
@@ -970,7 +918,7 @@ import java.nio.file.Paths;
             }
         }
 
-        private void generateRecuPDF(Don don) {
+        private String generateRecuPDF(Don don) {
             try {
                 Donateur donateur = donateurService.getDonateurById(don.getDonateurId());
 
@@ -1019,14 +967,15 @@ import java.nio.file.Paths;
                 document.save(downloadPath.toString());
                 document.close();
 
-                Alert alert = new Alert(Alert.AlertType.INFORMATION, "Reçu généré avec succès : " + downloadPath, ButtonType.OK);
-                alert.showAndWait();
+                System.out.println("Reçu généré avec succès : " + downloadPath);
+                return downloadPath.toString();
             } catch (IOException  e) {
                 e.printStackTrace();
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Erreur lors de la génération du reçu.", ButtonType.OK);
-                alert.showAndWait();
+                return null;
             }
         }
+
+
 
 
 

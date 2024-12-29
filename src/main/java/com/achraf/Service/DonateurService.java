@@ -12,18 +12,16 @@ import java.util.List;
 
 public class DonateurService {
 
-    public void addDonateur(String nom, String email, double montantDonne) {
-        String query = "INSERT INTO donateurs (nom, email, montant_donne) VALUES (?, ?, ?)";
+    public void addDonateur(String nom, String email) throws SQLException {
+        String query = "INSERT INTO donateurs (nom, email) VALUES (?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, nom);
             stmt.setString(2, email);
-            stmt.setDouble(3, montantDonne);
             stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
+
 
     public List<Donateur> getDonateurs() {
         List<Donateur> donateurs = new ArrayList<>();
