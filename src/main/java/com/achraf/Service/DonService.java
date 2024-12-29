@@ -2,18 +2,21 @@ package com.achraf.services;
 
 import com.achraf.DBConnection;
 import com.achraf.models.Don;
+import com.achraf.models.Donateur;
+import com.achraf.utils.EmailUtil;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DonService {
+    private DonateurService donateurService;
 
-    // Autres méthodes existantes...
+    public DonService() {
+        this.donateurService = new DonateurService();
+    }
+
     public List<Don> getDonsByDonateurId(int donateurId) throws SQLException {
         List<Don> dons = new ArrayList<>();
         String query = "SELECT * FROM dons WHERE donateur_id = ?";
@@ -36,23 +39,20 @@ public class DonService {
     }
 
     public void addDon(int donateurId, double montant, LocalDate dateDon) throws SQLException {
-        if (!donateurExists(donateurId)) {
-            throw new SQLException("Le donateur avec l'ID " + donateurId + " n'existe pas.");
-        }
-
         String query = "INSERT INTO dons (donateur_id, montant, date_don) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, donateurId);
             stmt.setDouble(2, montant);
-            stmt.setDate(3, java.sql.Date.valueOf(dateDon));
+            stmt.setDate(3, Date.valueOf(dateDon));
             stmt.executeUpdate();
-        }
 
-        // Mise à jour du total des dons
-        double totalDons = getTotalDons();
-        totalDons += montant;
-        updateTotalDons(totalDons);
+            // Envoyer un email de remerciement
+            Donateur donateur = donateurService.getDonateurById(donateurId);
+            String subject = "Merci pour votre don!";
+            String body = "Cher " + donateur.getNom() + ",\n\nMerci beaucoup pour votre généreux don de " + montant + " DHS.\n\nVotre soutien est grandement apprécié!\n\nCordialement,\nL'Association Najd";
+            EmailUtil.sendEmail(donateur.getEmail(), subject, body);
+        }
     }
 
     public boolean donateurExists(int donateurId) {
