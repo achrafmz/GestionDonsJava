@@ -27,7 +27,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.Optional;
+    import java.util.List;
+    import java.util.Optional;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
@@ -937,9 +938,38 @@ import java.nio.file.Paths;
         }
 
         private void deleteDonateur(Donateur donateur) {
-            donateurService.deleteDonateur(donateur.getId());
-            refreshDonateurTable();
+            Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmationAlert.setTitle("Confirmation de suppression");
+            confirmationAlert.setHeaderText("Attention");
+            confirmationAlert.setContentText("Vous allez supprimer le donateur " + donateur.getNom() + " et tous ses dons. Voulez-vous continuer ?");
+
+            ButtonType ouiButton = new ButtonType("Oui");
+            ButtonType nonButton = new ButtonType("Non", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+            confirmationAlert.getButtonTypes().setAll(ouiButton, nonButton);
+
+            Optional<ButtonType> result = confirmationAlert.showAndWait();
+            if (result.isPresent() && result.get() == ouiButton) {
+                try {
+                    // Supprimer tous les dons de ce donateur
+                    List<Don> dons = donService.getDonsByDonateurId(donateur.getId());
+                    for (Don don : dons) {
+                        donService.deleteDon(don.getId());
+                    }
+                    // Supprimer le donateur
+                    donateurService.deleteDonateur(donateur.getId());
+                    refreshDonateurTable();
+                    refreshDonTable();
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "Donateur et ses dons supprimés avec succès!", ButtonType.OK);
+                    alert.showAndWait();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Erreur lors de la suppression du donateur et de ses dons.", ButtonType.OK);
+                    alert.showAndWait();
+                }
+            }
         }
+
         private void generateRecuPDF(Don don) {
             try {
                 Donateur donateur = donateurService.getDonateurById(don.getDonateurId());

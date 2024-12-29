@@ -14,6 +14,26 @@ import java.util.List;
 public class DonService {
 
     // Autres méthodes existantes...
+    public List<Don> getDonsByDonateurId(int donateurId) throws SQLException {
+        List<Don> dons = new ArrayList<>();
+        String query = "SELECT * FROM dons WHERE donateur_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, donateurId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Don don = new Don(
+                            rs.getInt("id"),
+                            rs.getInt("donateur_id"),
+                            rs.getDouble("montant"),
+                            rs.getDate("date_don").toLocalDate()
+                    );
+                    dons.add(don);
+                }
+            }
+        }
+        return dons;
+    }
 
     public void addDon(int donateurId, double montant, LocalDate dateDon) throws SQLException {
         if (!donateurExists(donateurId)) {
