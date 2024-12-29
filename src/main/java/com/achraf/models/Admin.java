@@ -53,4 +53,5 @@ public class Admin {
     public StringProperty passwordProperty() {
         return password;
     }
+
 }
