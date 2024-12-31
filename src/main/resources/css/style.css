@@ -102,3 +102,58 @@
 .different-class {
     -fx-box-shadow: 4px 4px 10px 0px rgba(0, 0, 0, 0.4);
 }
+/* style.css */
+.delete-button {
+    -fx-background-color: red;
+    -fx-text-fill: white;
+}
+
+.recu-button {
+    -fx-background-color: green;
+    -fx-text-fill: white;
+}
+
+.attribuer-button {
+    -fx-background-color: blue;
+    -fx-text-fill: white;
+}
+
+.search-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: black;
+}
+
+.search-field {
+    -fx-font-size: 14px;
+    -fx-background-color: white;
+    -fx-border-color: gray;
+    -fx-border-width: 1px;
+}
+.card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 10;
+    -fx-padding: 20;
+    -fx-border-color: #dddddd;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0.5, 0, 0);
+}
+
+.card-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+.card-value {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+.donateur-card {
+    -fx-background-color: #f28b82;  /* Rouge clair */
+}
+
+.dons-card {
+    -fx-background-color: #fbbc04;  /* Jaune */
+}

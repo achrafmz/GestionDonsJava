@@ -146,6 +146,27 @@ public class DonService {
             return false;
         }
     }
+    public List<Don> getDonsByBeneficiaireId(int beneficiaireId) throws SQLException {
+        List<Don> dons = new ArrayList<>();
+        String query = "SELECT d.id, d.donateur_id, d.montant, d.date_don FROM dons AS d JOIN dons_beneficiaires AS db ON d.id = db.don_id WHERE db.beneficiaire_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, beneficiaireId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Don don = new Don(
+                            rs.getInt("id"),
+                            rs.getInt("donateur_id"),
+                            rs.getDouble("montant"),
+                            rs.getDate("date_don").toLocalDate()
+                    );
+                    dons.add(don);
+                }
+            }
+        }
+        return dons;
+    }
+
 
     public double getTotalDons() throws SQLException {
         String query = "SELECT montant FROM total_dons WHERE id = 1";
@@ -159,6 +180,7 @@ public class DonService {
             }
         }
     }
+
 
     public void updateTotalDons(double totalDons) throws SQLException {
         String query = "UPDATE total_dons SET montant = ? WHERE id = 1";
@@ -211,4 +233,30 @@ public class DonService {
             stmt.executeUpdate();
         }
     }
+    public List<String> getDonationDates() throws SQLException {
+        List<String> dates = new ArrayList<>();
+        String query = "SELECT DISTINCT date_don FROM dons ORDER BY date_don";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                dates.add(rs.getDate("date_don").toString());
+            }
+        }
+        return dates;
+    }
+
+    public List<Double> getDailyDonationAmounts() throws SQLException {
+        List<Double> amounts = new ArrayList<>();
+        String query = "SELECT date_don, SUM(montant) as daily_total FROM dons GROUP BY date_don ORDER BY date_don";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                amounts.add(rs.getDouble("daily_total"));
+            }
+        }
+        return amounts;
+    }
+
 }
