@@ -1,45 +1,36 @@
-
-
 package com.achraf.View;
+import java.io.FileOutputStream;
+import java.nio.file.Paths;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import java.io.IOException;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
+import java.nio.file.Files;
 
-import com.achraf.models.*;
-import com.achraf.services.AdminService;
-import com.achraf.services.BeneficiaireService;
-import com.achraf.services.DonBeneficiaireService;
-import com.achraf.services.DonService;
-import com.achraf.services.DonateurService;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import com.achraf.models.*;
+import com.achraf.services.*;
 
-import java.awt.*;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class DashboardView {
     private Scene scene;
@@ -110,7 +101,7 @@ public class DashboardView {
         sidebar.setAlignment(Pos.CENTER);
         sidebar.setPrefWidth(200);
         sidebar.setPadding(new Insets(10));
-        sidebar.setStyle("-fx-background-color: #2f4f4f; -fx-text-fill: white;");
+        sidebar.getStyleClass().add("sidebar");
 
         cardBox = new HBox(20);
         cardBox.setAlignment(Pos.CENTER);
@@ -122,6 +113,7 @@ public class DashboardView {
         mainPane.setCenter(cardBox);
 
         scene = new Scene(mainPane, 1000, 600);
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         adminButton.setOnAction(e -> {
             refreshAdminTable();
@@ -166,130 +158,20 @@ public class DashboardView {
 
     private void createDashboardCards() throws SQLException {
         Label donateursCount = new Label("Nombre de Donateurs: " + donateurService.getDonateurs().size());
-        donateursCount.setStyle("-fx-font-size: 24; -fx-text-fill: #ffffff;");
+        donateursCount.getStyleClass().add("card-label");
         VBox donateurCard = new VBox(donateursCount);
         donateurCard.setAlignment(Pos.CENTER);
-        donateurCard.setPadding(new Insets(20));
-        donateurCard.setStyle("-fx-background-color: #4682b4; -fx-background-radius: 10; -fx-padding: 20;");
+        donateurCard.getStyleClass().add("card");
 
         double totalDons = donService.getTotalDons();
         Label donsSum = new Label("Montant Total des Dons: " + totalDons);
-        donsSum.setStyle("-fx-font-size: 24; -fx-text-fill: #ffffff;");
+        donsSum.getStyleClass().add("card-label");
         VBox donsCard = new VBox(donsSum);
         donsCard.setAlignment(Pos.CENTER);
-        donsCard.setPadding(new Insets(20));
-        donsCard.setStyle("-fx-background-color: #32cd32; -fx-background-radius: 10; -fx-padding: 20;");
+        donsCard.getStyleClass().add("card");
 
         cardBox.getChildren().addAll(donateurCard, donsCard);
     }
-
-    private void createAdminTable() {
-        TableColumn<Admin, Integer> idColumn = new TableColumn<>("ID");
-        idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
-
-        TableColumn<Admin, String> usernameColumn = new TableColumn<>("Nom d'utilisateur");
-        usernameColumn.setCellValueFactory(cellData -> cellData.getValue().usernameProperty());
-
-        TableColumn<Admin, String> passwordColumn = new TableColumn<>("Mot de passe");
-        passwordColumn.setCellValueFactory(cellData -> cellData.getValue().passwordProperty());
-
-        TableColumn<Admin, Void> actionColumn = new TableColumn<>("Actions");
-        actionColumn.setCellFactory(col -> new TableCell<>() {
-            private final Button deleteButton = new Button("Supprimer");
-            private final Button updateButton = new Button("Modifier");
-
-            {
-                deleteButton.setOnAction(event -> {
-                    Admin admin = getTableView().getItems().get(getIndex());
-                    deleteAdmin(admin);
-                });
-
-                updateButton.setOnAction(event -> {
-                    Admin admin = getTableView().getItems().get(getIndex());
-                    showUpdateAdminDialog(admin);
-                });
-
-                deleteButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
-                updateButton.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    HBox buttons = new HBox(10, updateButton, deleteButton);
-                    setGraphic(buttons);
-                }
-            }
-        });
-
-        adminTable.getColumns().addAll(idColumn, usernameColumn, passwordColumn, actionColumn);
-        refreshAdminTable();
-    }
-    private void createDonTable() {
-        TableColumn<Don, Integer> idColumn = new TableColumn<>("ID");
-        idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
-
-        TableColumn<Don, String> donateurNomColumn = new TableColumn<>("Nom du Donateur");
-        donateurNomColumn.setCellValueFactory(cellData -> {
-            Donateur donateur = getDonateur(cellData.getValue().getDonateurId());
-            return donateur != null ? new SimpleStringProperty(donateur.getNom()) : new SimpleStringProperty("Erreur");
-        });
-
-        TableColumn<Don, Double> montantColumn = new TableColumn<>("Montant");
-        montantColumn.setCellValueFactory(cellData -> cellData.getValue().montantProperty().asObject());
-
-        TableColumn<Don, LocalDate> dateDonColumn = new TableColumn<>("Date de Don");
-        dateDonColumn.setCellValueFactory(cellData -> cellData.getValue().dateDonProperty());
-
-        TableColumn<Don, Void> actionColumn = new TableColumn<>("Actions");
-        actionColumn.setCellFactory(col -> new TableCell<>() {
-            private final Button deleteButton = new Button("Supprimer");
-            private final Button recuButton = new Button("Télécharger Reçu");
-
-            {
-                deleteButton.setOnAction(event -> {
-                    Don don = getTableView().getItems().get(getIndex());
-                    deleteDon(don);
-                });
-
-                recuButton.setOnAction(event -> {
-                    Don don = getTableView().getItems().get(getIndex());
-                    generateRecuPDF(don);
-                });
-
-                deleteButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
-                recuButton.setStyle("-fx-background-color: blue; -fx-text-fill: white;");
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    HBox buttons = new HBox(10, deleteButton, recuButton);
-                    setGraphic(buttons);
-                }
-            }
-        });
-
-        donTable.getColumns().addAll(idColumn, donateurNomColumn, montantColumn, dateDonColumn, actionColumn);
-        refreshDonTable();
-    }
-
-    private Donateur getDonateur(int donateurId) {
-        return donateurService.getDonateurById(donateurId);
-    }
-
-    private String getDonateurNom(int donateurId) {
-        Donateur donateur = donateurService.getDonateurById(donateurId);
-        return donateur.getNom();
-    }
-
-
     private void createDonateurTable() {
         TableColumn<Donateur, Integer> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
@@ -319,8 +201,8 @@ public class DashboardView {
                     showUpdateDonateurDialog(donateur);
                 });
 
-                deleteButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
-                updateButton.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
+                deleteButton.getStyleClass().add("delete-button");
+                updateButton.getStyleClass().add("update-button");
             }
 
             @Override
@@ -338,7 +220,145 @@ public class DashboardView {
         donateurTable.getColumns().addAll(idColumn, nomColumn, emailColumn, montantDonneColumn, actionColumn);
         refreshDonateurTable();
     }
+    private void deleteDonateur(Donateur donateur) {
+        Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmationAlert.setTitle("Confirmation de suppression");
+        confirmationAlert.setHeaderText("Attention");
+        confirmationAlert.setContentText("Vous allez supprimer le donateur " + donateur.getNom() + " et tous ses dons. Voulez-vous continuer ?");
 
+        ButtonType ouiButton = new ButtonType("Oui");
+        ButtonType nonButton = new ButtonType("Non", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        confirmationAlert.getButtonTypes().setAll(ouiButton, nonButton);
+
+        Optional<ButtonType> result = confirmationAlert.showAndWait();
+        if (result.isPresent() && result.get() == ouiButton) {
+            try {
+                // Supprimer tous les dons de ce donateur
+                List<Don> dons = donService.getDonsByDonateurId(donateur.getId());
+                for (Don don : dons) {
+                    donService.deleteDon(don.getId());
+                }
+                // Supprimer le donateur
+                donateurService.deleteDonateur(donateur.getId());
+                refreshDonateurTable();
+                refreshDonTable();
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Donateur et ses dons supprimés avec succès!");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la suppression du donateur et de ses dons.");
+            }
+        }
+    }
+
+    private void createHistoriqueTable() {
+        TableColumn<HistoriqueDon, Integer> idColumn = new TableColumn<>("ID");
+        idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
+
+        TableColumn<HistoriqueDon, Integer> donIdColumn = new TableColumn<>("Don ID");
+        donIdColumn.setCellValueFactory(cellData -> cellData.getValue().donIdProperty().asObject());
+
+        TableColumn<HistoriqueDon, String> beneficiaireNomColumn = new TableColumn<>("Bénéficiaire");
+        beneficiaireNomColumn.setCellValueFactory(cellData -> cellData.getValue().beneficiaireNomProperty());
+
+        TableColumn<HistoriqueDon, LocalDate> dateAttributionColumn = new TableColumn<>("Date d'Attribution");
+        dateAttributionColumn.setCellValueFactory(cellData -> cellData.getValue().dateAttributionProperty());
+
+        TableColumn<HistoriqueDon, Double> montantColumn = new TableColumn<>("Montant");
+        montantColumn.setCellValueFactory(cellData -> cellData.getValue().montantProperty().asObject());
+
+        TableColumn<HistoriqueDon, Void> actionColumn = new TableColumn<>("Actions");
+        actionColumn.setCellFactory(col -> new TableCell<>() {
+            private final Button viewReportButton = new Button("Voir/Télécharger Rapport");
+
+            {
+                viewReportButton.setOnAction(event -> {
+                    HistoriqueDon historiqueDon = getTableView().getItems().get(getIndex());
+                    generateOperationReport(historiqueDon);
+                });
+
+                viewReportButton.getStyleClass().add("recu-button");
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(viewReportButton);
+                }
+            }
+        });
+
+        historiqueTable.getColumns().addAll(idColumn, donIdColumn, beneficiaireNomColumn, dateAttributionColumn, montantColumn, actionColumn);
+    }
+
+    private void deleteAdmin(Admin admin) {
+        Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmationAlert.setTitle("Confirmation de suppression");
+        confirmationAlert.setHeaderText("Attention");
+        confirmationAlert.setContentText("Vous allez supprimer l'administrateur " + admin.getUsername() + ". Voulez-vous continuer ?");
+
+        ButtonType ouiButton = new ButtonType("Oui");
+        ButtonType nonButton = new ButtonType("Non", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        confirmationAlert.getButtonTypes().setAll(ouiButton, nonButton);
+
+        Optional<ButtonType> result = confirmationAlert.showAndWait();
+        if (result.isPresent() && result.get() == ouiButton) {
+            adminService.deleteAdmin(admin.getId());
+            refreshAdminTable();
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Administrateur supprimé avec succès !");
+        }
+    }
+
+
+    private void createAdminTable() {
+        TableColumn<Admin, Integer> idColumn = new TableColumn<>("ID");
+        idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
+
+        TableColumn<Admin, String> usernameColumn = new TableColumn<>("Nom d'utilisateur");
+        usernameColumn.setCellValueFactory(cellData -> cellData.getValue().usernameProperty());
+
+        TableColumn<Admin, String> passwordColumn = new TableColumn<>("Mot de passe");
+        passwordColumn.setCellValueFactory(cellData -> cellData.getValue().passwordProperty());
+
+        TableColumn<Admin, Void> actionColumn = new TableColumn<>("Actions");
+        actionColumn.setCellFactory(col -> new TableCell<>() {
+            private final Button deleteButton = new Button("Supprimer");
+            private final Button updateButton = new Button("Modifier");
+
+            {
+                deleteButton.setOnAction(event -> {
+                    Admin admin = getTableView().getItems().get(getIndex());
+                    deleteAdmin(admin);
+                });
+
+                updateButton.setOnAction(event -> {
+                    Admin admin = getTableView().getItems().get(getIndex());
+                    showUpdateAdminDialog(admin);
+                });
+
+                deleteButton.getStyleClass().add("delete-button");
+                updateButton.getStyleClass().add("update-button");
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    HBox buttons = new HBox(10, updateButton, deleteButton);
+                    setGraphic(buttons);
+                }
+            }
+        });
+
+        adminTable.getColumns().addAll(idColumn, usernameColumn, passwordColumn, actionColumn);
+        refreshAdminTable();
+    }
     private void createBeneficiaireTable() {
         TableColumn<Beneficiaire, Integer> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
@@ -359,13 +379,16 @@ public class DashboardView {
         adresseColumn.setCellValueFactory(cellData -> cellData.getValue().adresseProperty());
 
         TableColumn<Beneficiaire, Void> actionColumn = new TableColumn<>("Actions");
-        actionColumn.setCellFactory(col -> new TableCell<Beneficiaire, Void>() {
+        actionColumn.setCellFactory(col -> new TableCell<>() {
             private final Button attribuerButton = new Button("Attribuer un Don");
             private final Button deleteButton = new Button("Supprimer");
             private final Button updateButton = new Button("Modifier");
 
             {
-                attribuerButton.setOnAction(event -> handleAttribuerDon(getTableView().getItems().get(getIndex())));
+                attribuerButton.setOnAction(event -> {
+                    Beneficiaire beneficiaire = getTableView().getItems().get(getIndex());
+                    handleAttribuerDon(beneficiaire);
+                });
                 deleteButton.setOnAction(event -> {
                     Beneficiaire beneficiaire = getTableView().getItems().get(getIndex());
                     deleteBeneficiaire(beneficiaire);
@@ -375,9 +398,9 @@ public class DashboardView {
                     showUpdateBeneficiaireDialog(beneficiaire);
                 });
 
-                attribuerButton.setStyle("-fx-background-color: green; -fx-text-fill: white;");
-                deleteButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
-                updateButton.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
+                attribuerButton.getStyleClass().add("attribuer-button");
+                deleteButton.getStyleClass().add("delete-button");
+                updateButton.getStyleClass().add("update-button");
             }
 
             @Override
@@ -395,6 +418,7 @@ public class DashboardView {
         beneficiaireTable.getColumns().addAll(idColumn, nomColumn, prenomColumn, emailColumn, telephoneColumn, adresseColumn, actionColumn);
         refreshBeneficiaireTable();
     }
+
 
     private void refreshAdminTable() {
         ObservableList<Admin> admins = FXCollections.observableArrayList(adminService.getAdmins());
@@ -434,12 +458,35 @@ public class DashboardView {
         });
 
         VBox vbox = new VBox(10, new Label("Nom d'utilisateur:"), usernameField, new Label("Mot de passe:"), passwordField, addButton);
+        vbox.setPadding(new Insets(20));
+        vbox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #dddddd; -fx-border-width: 1px;");
         Scene dialogScene = new Scene(vbox, 300, 200);
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Ajouter un Admin");
         dialogStage.setScene(dialogScene);
         dialogStage.show();
     }
+    private void deleteDon(Don don) {
+        Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmationAlert.setTitle("Confirmation de suppression");
+        confirmationAlert.setHeaderText("Attention");
+        confirmationAlert.setContentText("Vous allez supprimer le don de " + don.getMontant() + ". Voulez-vous continuer ?");
+
+        ButtonType ouiButton = new ButtonType("Oui");
+        ButtonType nonButton = new ButtonType("Non", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        confirmationAlert.getButtonTypes().setAll(ouiButton, nonButton);
+
+        Optional<ButtonType> result = confirmationAlert.showAndWait();
+        if (result.isPresent() && result.get() == ouiButton) {
+            donService.deleteDon(don.getId());
+            refreshDonTable();
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Don supprimé avec succès !");
+        }
+    }
+
+
+
 
     private void showUpdateAdminDialog(Admin admin) {
         TextField usernameField = new TextField(admin.getUsername());
@@ -455,11 +502,64 @@ public class DashboardView {
         });
 
         VBox vbox = new VBox(10, new Label("Nom d'utilisateur:"), usernameField, new Label("Mot de passe:"), passwordField, updateButton);
+        vbox.setPadding(new Insets(20));
+        vbox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #dddddd; -fx-border-width: 1px;");
         Scene dialogScene = new Scene(vbox, 300, 200);
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Modifier Admin");
         dialogStage.setScene(dialogScene);
         dialogStage.show();
+    }
+    private void createDonTable() {
+        TableColumn<Don, Integer> idColumn = new TableColumn<>("ID");
+        idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
+
+        TableColumn<Don, String> donateurNomColumn = new TableColumn<>("Nom du Donateur");
+        donateurNomColumn.setCellValueFactory(cellData -> {
+            Donateur donateur = donateurService.getDonateurById(cellData.getValue().getDonateurId());
+            return donateur != null ? new SimpleStringProperty(donateur.getNom()) : new SimpleStringProperty("Erreur");
+        });
+
+        TableColumn<Don, Double> montantColumn = new TableColumn<>("Montant");
+        montantColumn.setCellValueFactory(cellData -> cellData.getValue().montantProperty().asObject());
+
+        TableColumn<Don, LocalDate> dateDonColumn = new TableColumn<>("Date de Don");
+        dateDonColumn.setCellValueFactory(cellData -> cellData.getValue().dateDonProperty());
+
+        TableColumn<Don, Void> actionColumn = new TableColumn<>("Actions");
+        actionColumn.setCellFactory(col -> new TableCell<>() {
+            private final Button deleteButton = new Button("Supprimer");
+            private final Button recuButton = new Button("Télécharger Reçu");
+
+            {
+                deleteButton.setOnAction(event -> {
+                    Don don = getTableView().getItems().get(getIndex());
+                    deleteDon(don);
+                });
+
+                recuButton.setOnAction(event -> {
+                    Don don = getTableView().getItems().get(getIndex());
+                    generateRecuPDF(don);
+                });
+
+                deleteButton.getStyleClass().add("delete-button");
+                recuButton.getStyleClass().add("recu-button");
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    HBox buttons = new HBox(10, deleteButton, recuButton);
+                    setGraphic(buttons);
+                }
+            }
+        });
+
+        donTable.getColumns().addAll(idColumn, donateurNomColumn, montantColumn, dateDonColumn, actionColumn);
+        refreshDonTable();
     }
 
     private void showAddDonDialog() {
@@ -500,13 +600,14 @@ public class DashboardView {
         });
 
         VBox vbox = new VBox(10, new Label("Donateur:"), donateurComboBox, new Label("Montant:"), montantField, addButton);
+        vbox.setPadding(new Insets(20));
+        vbox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #dddddd; -fx-border-width: 1px;");
         Scene dialogScene = new Scene(vbox, 300, 250);
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Ajouter un Don");
         dialogStage.setScene(dialogScene);
         dialogStage.show();
     }
-
 
     private void showUpdateDonDialog(Don don) {
         ComboBox<Donateur> donateurComboBox = new ComboBox<>();
@@ -554,419 +655,14 @@ public class DashboardView {
         });
 
         VBox vbox = new VBox(10, new Label("Donateur:"), donateurComboBox, new Label("Montant:"), montantField, new Label("Date de Don:"), dateDonPicker, updateButton);
+        vbox.setPadding(new Insets(20));
+        vbox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #dddddd; -fx-border-width: 1px;");
         Scene dialogScene = new Scene(vbox, 300, 250);
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Modifier Don");
         dialogStage.setScene(dialogScene);
         dialogStage.show();
     }
-
-    private void showAddDonateurDialog() {
-        javafx.scene.control.TextField nomField = new javafx.scene.control.TextField();
-        javafx.scene.control.TextField emailField = new javafx.scene.control.TextField();
-        javafx.scene.control.Button addButton = new javafx.scene.control.Button("Ajouter");
-
-        addButton.setOnAction(e -> {
-            String nom = nomField.getText().trim();
-            String email = emailField.getText().trim();
-
-            if (nom.isEmpty() || email.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
-                return;
-            }
-
-            try {
-                donateurService.addDonateur(nom, email);
-                refreshDonateurTable();
-            } catch (SQLException ex) {
-                showAlert(Alert.AlertType.ERROR, "Erreur de la base de données", ex.getMessage());
-            }
-        });
-
-        VBox vbox = new VBox(10, new javafx.scene.control.Label("Nom:"), nomField, new javafx.scene.control.Label("Email:"), emailField, addButton);
-        Scene dialogScene = new Scene(vbox, 300, 250);
-        Stage dialogStage = new Stage();
-        dialogStage.setTitle("Ajouter un Donateur");
-        dialogStage.setScene(dialogScene);
-        dialogStage.show();
-    }
-
-
-
-
-    private void showUpdateDonateurDialog(Donateur donateur) {
-        TextField nomField = new TextField(donateur.getNom());
-        TextField emailField = new TextField(donateur.getEmail());
-        TextField montantDonneField = new TextField(String.valueOf(donateur.getMontantDonne()));
-        Button updateButton = new Button("Modifier");
-
-        updateButton.setOnAction(e -> {
-            try {
-                String nom = nomField.getText().trim();
-                String email = emailField.getText().trim();
-                double montantDonne = Double.parseDouble(montantDonneField.getText().trim());
-
-                if (nom.isEmpty() || email.isEmpty()) {
-                    showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
-                    return;
-                }
-
-                donateurService.updateDonateur(donateur.getId(), nom, email, montantDonne);
-                refreshDonateurTable();
-            } catch (NumberFormatException ex) {
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
-            } catch (SQLException ex) {
-                showAlert(Alert.AlertType.ERROR, "Erreur de la base de données", ex.getMessage());
-            }
-        });
-
-        VBox vbox = new VBox(10, new Label("Nom:"), nomField, new Label("Email:"), emailField, new Label("Montant Donné:"), montantDonneField, updateButton);
-        Scene dialogScene = new Scene(vbox, 300, 250);
-        Stage dialogStage = new Stage();
-        dialogStage.setTitle("Modifier Donateur");
-        dialogStage.setScene(dialogScene);
-        dialogStage.show();
-    }
-
-    private void showAddBeneficiaireDialog() {
-        TextField nomField = new TextField();
-        TextField prenomField = new TextField();
-        TextField emailField = new TextField();
-        TextField telephoneField = new TextField();
-        TextField adresseField = new TextField();
-        Button addButton = new Button("Ajouter");
-
-        addButton.setOnAction(e -> {
-            String nom = nomField.getText().trim();
-            String prenom = prenomField.getText().trim();
-            String email = emailField.getText().trim();
-            String telephone = telephoneField.getText().trim();
-            String adresse = adresseField.getText().trim();
-
-            if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || telephone.isEmpty() || adresse.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
-                return;
-            }
-
-            beneficiaireService.addBeneficiaire(nom, prenom, email, telephone, adresse);
-            refreshBeneficiaireTable();
-        });
-
-        VBox vbox = new VBox(10, new Label("Nom:"), nomField, new Label("Prénom:"), prenomField, new Label("Email:"), emailField, new Label("Téléphone:"), telephoneField, new Label("Adresse:"), adresseField, addButton);
-        Scene dialogScene = new Scene(vbox, 300, 300);
-        Stage dialogStage = new Stage();
-        dialogStage.setTitle("Ajouter un Bénéficiaire");
-        dialogStage.setScene(dialogScene);
-        dialogStage.show();
-    }
-    private void showUpdateBeneficiaireDialog(Beneficiaire beneficiaire) {
-        TextField nomField = new TextField(beneficiaire.getNom());
-        TextField prenomField = new TextField(beneficiaire.getPrenom());
-        TextField emailField = new TextField(beneficiaire.getEmail());
-        TextField telephoneField = new TextField(beneficiaire.getTelephone());
-        TextField adresseField = new TextField(beneficiaire.getAdresse());
-        Button updateButton = new Button("Modifier");
-
-        updateButton.setOnAction(e -> {
-            String nom = nomField.getText();
-            String prenom = prenomField.getText();
-            String email = emailField.getText();
-            String telephone = telephoneField.getText();
-            String adresse = adresseField.getText();
-
-            if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || telephone.isEmpty() || adresse.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
-                return;
-            }
-
-            beneficiaireService.updateBeneficiaire(new Beneficiaire(beneficiaire.getId(), nom, prenom, email, telephone, adresse));
-            refreshBeneficiaireTable();
-        });
-
-        VBox vbox = new VBox(10, new Label("Nom:"), nomField, new Label("Prénom:"), prenomField, new Label("Email:"), emailField, new Label("Téléphone:"), telephoneField, new Label("Adresse:"), adresseField, updateButton);
-        Scene dialogScene = new Scene(vbox, 300, 300);
-        Stage dialogStage = new Stage();
-        dialogStage.setTitle("Modifier Bénéficiaire");
-        dialogStage.setScene(dialogScene);
-        dialogStage.show();
-    }
-
-    private void deleteBeneficiaire(Beneficiaire beneficiaire) {
-        beneficiaireService.deleteBeneficiaire(beneficiaire.getId());
-        refreshBeneficiaireTable();
-    }
-
-    private void handleAttribuerDon(Beneficiaire beneficiaire) {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Attribuer un Don");
-        dialog.setHeaderText("Attribuer un Don à " + beneficiaire.getNom());
-        dialog.setContentText("Montant du Don:");
-
-        Optional<String> result = dialog.showAndWait();
-        if (result.isPresent()) {
-            double montant = Double.parseDouble(result.get());
-            try {
-                double totalDons = donService.getTotalDons();
-                if (totalDons >= montant) {
-                    System.out.println("Total des dons suffisant pour attribuer le don.");
-                    // Ajouter le don uniquement dans l'historique
-                    int donId = 1; // ID fictif pour le don (n'est plus utilisé pour `dons`)
-
-                    donBeneficiaireService.attribuerDon(donId, beneficiaire.getId(), montant, LocalDate.now());
-                    donBeneficiaireService.enregistrerHistoriqueDon(donId, beneficiaire.getId(), montant, LocalDate.now());
-
-                    // Mise à jour du total des dons
-                    donService.updateTotalDons(totalDons - montant);
-
-                    System.out.println("Mise à jour du total des dons après attribution.");
-
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "Don attribué avec succès et enregistré dans l'historique des dons!", ButtonType.OK);
-                    alert.showAndWait();
-                } else {
-                    Alert alert = new Alert(Alert.AlertType.WARNING, "Fonds insuffisants pour attribuer ce don.", ButtonType.OK);
-                    alert.showAndWait();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Erreur lors de l'attribution du don.", ButtonType.OK);
-                alert.showAndWait();
-            }
-        }
-    }
-
-    private void handleLogout(Stage stage) {
-        LoginView loginView = new LoginView(stage);
-        stage.setScene(loginView.getScene());
-    }
-
-    private void showAlert(Alert.AlertType alertType, String title, String message) {
-        Alert alert = new Alert(alertType);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private TableCell<?, Void> createActionCell(TableView<?> table, String type) {
-        return new TableCell<>() {
-            private final Button attribuerButton = new Button("Attribuer un Don");
-            private final Button deleteButton = new Button("Supprimer");
-            private final Button updateButton = new Button("Modifier");
-
-            {
-                attribuerButton.setOnAction(event -> {
-                    if (type.equals("beneficiaire")) {
-                        Beneficiaire beneficiaire = (Beneficiaire) getTableView().getItems().get(getIndex());
-                        handleAttribuerDon(beneficiaire);
-                    }
-                });
-
-                deleteButton.setOnAction(event -> {
-                    if (type.equals("beneficiaire")) {
-                        Beneficiaire beneficiaire = (Beneficiaire) getTableView().getItems().get(getIndex());
-                        deleteBeneficiaire(beneficiaire);
-                    }
-                });
-
-                updateButton.setOnAction(event -> {
-                    if (type.equals("beneficiaire")) {
-                        Beneficiaire beneficiaire = (Beneficiaire) getTableView().getItems().get(getIndex());
-                        showUpdateBeneficiaireDialog(beneficiaire);
-                    }
-                });
-
-                attribuerButton.setStyle("-fx-background-color: green; -fx-text-fill: white;");
-                deleteButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
-                updateButton.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    VBox box = new VBox(5, attribuerButton, deleteButton, updateButton);
-                    setGraphic(box);
-                }
-            }
-        };
-    }
-
-    private void createHistoriqueTable() {
-        historiqueTable = new TableView<>();
-
-        TableColumn<HistoriqueDon, Integer> idColumn = new TableColumn<>("ID");
-        idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
-
-        TableColumn<HistoriqueDon, Integer> donIdColumn = new TableColumn<>("Don ID");
-        donIdColumn.setCellValueFactory(cellData -> cellData.getValue().donIdProperty().asObject());
-
-        TableColumn<HistoriqueDon, String> beneficiaireNomColumn = new TableColumn<>("Bénéficiaire");
-        beneficiaireNomColumn.setCellValueFactory(cellData -> cellData.getValue().beneficiaireNomProperty());
-
-        TableColumn<HistoriqueDon, LocalDate> dateAttributionColumn = new TableColumn<>("Date d'Attribution");
-        dateAttributionColumn.setCellValueFactory(cellData -> cellData.getValue().dateAttributionProperty());
-
-        TableColumn<HistoriqueDon, Double> montantColumn = new TableColumn<>("Montant");
-        montantColumn.setCellValueFactory(cellData -> cellData.getValue().montantProperty().asObject());
-
-        TableColumn<HistoriqueDon, Void> actionColumn = new TableColumn<>("Actions");
-        actionColumn.setCellFactory(col -> new TableCell<>() {
-            private final Button viewReportButton = new Button("Voir/Télécharger Rapport");
-
-            {
-                viewReportButton.setOnAction(event -> {
-                    HistoriqueDon historiqueDon = getTableView().getItems().get(getIndex());
-                    generateOperationReport(historiqueDon);
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(viewReportButton);
-                }
-            }
-        });
-
-        historiqueTable.getColumns().addAll(idColumn, donIdColumn, beneficiaireNomColumn, dateAttributionColumn, montantColumn, actionColumn);
-    }
-
-    private void generateOperationReport(HistoriqueDon historiqueDon) {
-        System.out.println("Début de la génération du rapport pour l'ID du don: " + historiqueDon.getDonId());
-
-        // Création du document Word
-        XWPFDocument document = new XWPFDocument();
-
-        // Ajout de l'en-tête du rapport
-        XWPFParagraph header = document.createParagraph();
-        header.setAlignment(ParagraphAlignment.CENTER);
-        XWPFRun run = header.createRun();
-        run.setText("Association NAJD");
-        run.setBold(true);
-        run.setFontSize(16);
-        run.addBreak();
-
-        run = header.createRun();
-        run.setText("Adresse :  Rue ZERKTOUNI , Marrakech, Maroc");
-        run.setFontSize(12);
-        run.addBreak();
-        run = header.createRun();
-        run.setText("0655554443");
-        run.setFontSize(12);
-        run.addBreak();
-        run.addBreak();
-
-        // Ajout du titre du rapport
-        XWPFParagraph title = document.createParagraph();
-        title.setAlignment(ParagraphAlignment.CENTER);
-        run = title.createRun();
-        run.setText("Rapport de l'Opération de Don");
-        run.setBold(true);
-        run.setFontSize(14);
-        run.addBreak();
-        run.addBreak();
-
-        // Ajout des détails de l'opération de don
-        XWPFParagraph paragraph = document.createParagraph();
-        run = paragraph.createRun();
-        run.setText("Détails de l'Opération:");
-        run.setBold(true);
-        run.setFontSize(12);
-        run.addBreak();
-
-        run = paragraph.createRun();
-        run.setText("ID du Don: " + historiqueDon.getDonId());
-        run.addBreak();
-
-        run.setText("Bénéficiaire: " + historiqueDon.getBeneficiaireNom());
-        run.addBreak();
-
-        run.setText("Date d'Attribution: " + historiqueDon.getDateAttribution());
-        run.addBreak();
-
-        run.setText("Montant: " + historiqueDon.getMontant());
-        run.addBreak();
-
-        // Chemin de sauvegarde du rapport dans le répertoire Téléchargements
-        String userHome = System.getProperty("user.home");
-        Path downloadPath = Paths.get(userHome, "Downloads");
-
-        // Vérifier et créer le répertoire Téléchargements s'il n'existe pas
-        if (!Files.exists(downloadPath)) {
-            try {
-                Files.createDirectories(downloadPath);
-            } catch (IOException e) {
-                e.printStackTrace();
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Erreur lors de la création du répertoire Téléchargements.", ButtonType.OK);
-                alert.showAndWait();
-                return;
-            }
-        }
-
-        String filePath = downloadPath.resolve("rapport_don_" + historiqueDon.getId() + ".docx").toString();
-        System.out.println("Chemin de sauvegarde du rapport: " + filePath);
-
-        // Sauvegarder le rapport dans un fichier
-        try (FileOutputStream out = new FileOutputStream(filePath)) {
-            document.write(out);
-            System.out.println("Rapport généré et sauvegardé avec succès.");
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Rapport généré avec succès : " + filePath, ButtonType.OK);
-            alert.showAndWait();
-        } catch (IOException e) {
-            e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Erreur lors de la génération du rapport.", ButtonType.OK);
-            alert.showAndWait();
-        }
-    }
-
-    private void deleteAdmin(Admin admin) {
-        adminService.deleteAdmin(admin.getId());
-        refreshAdminTable();
-    }
-
-    private void deleteDon(Don don) {
-        donService.deleteDon(don.getId());
-        refreshDonTable();
-    }
-
-    private void deleteDonateur(Donateur donateur) {
-        Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmationAlert.setTitle("Confirmation de suppression");
-        confirmationAlert.setHeaderText("Attention");
-        confirmationAlert.setContentText("Vous allez supprimer le donateur " + donateur.getNom() + " et tous ses dons. Voulez-vous continuer ?");
-
-        ButtonType ouiButton = new ButtonType("Oui");
-        ButtonType nonButton = new ButtonType("Non", ButtonBar.ButtonData.CANCEL_CLOSE);
-
-        confirmationAlert.getButtonTypes().setAll(ouiButton, nonButton);
-
-        Optional<ButtonType> result = confirmationAlert.showAndWait();
-        if (result.isPresent() && result.get() == ouiButton) {
-            try {
-                // Supprimer tous les dons de ce donateur
-                List<Don> dons = donService.getDonsByDonateurId(donateur.getId());
-                for (Don don : dons) {
-                    donService.deleteDon(don.getId());
-                }
-                // Supprimer le donateur
-                donateurService.deleteDonateur(donateur.getId());
-                refreshDonateurTable();
-                refreshDonTable();
-                Alert alert = new Alert(Alert.AlertType.INFORMATION, "Donateur et ses dons supprimés avec succès!", ButtonType.OK);
-                alert.showAndWait();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Erreur lors de la suppression du donateur et de ses dons.", ButtonType.OK);
-                alert.showAndWait();
-            }
-        }
-    }
-
     private String generateRecuPDF(Don don) {
         try {
             Donateur donateur = donateurService.getDonateurById(don.getDonateurId());
@@ -1018,16 +714,276 @@ public class DashboardView {
 
             System.out.println("Reçu généré avec succès : " + downloadPath);
             return downloadPath.toString();
-        } catch (IOException  e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
     }
 
+    private void showAddDonateurDialog() {
+        TextField nomField = new TextField();
+        TextField emailField = new TextField();
+        Button addButton = new Button("Ajouter");
+
+        addButton.setOnAction(e -> {
+            String nom = nomField.getText().trim();
+            String email = emailField.getText().trim();
+
+            if (nom.isEmpty() || email.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
+                return;
+            }
+
+            try {
+                donateurService.addDonateur(nom, email);
+                refreshDonateurTable();
+            } catch (SQLException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur de la base de données", ex.getMessage());
+            }
+        });
+
+        VBox vbox = new VBox(10, new Label("Nom:"), nomField, new Label("Email:"), emailField, addButton);
+        vbox.setPadding(new Insets(20));
+        vbox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #dddddd; -fx-border-width: 1px;");
+        Scene dialogScene = new Scene(vbox, 300, 250);
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Ajouter un Donateur");
+        dialogStage.setScene(dialogScene);
+        dialogStage.show();
+    }
+
+    private void showUpdateDonateurDialog(Donateur donateur) {
+        TextField nomField = new TextField(donateur.getNom());
+        TextField emailField = new TextField(donateur.getEmail());
+        TextField montantDonneField = new TextField(String.valueOf(donateur.getMontantDonne()));
+        Button updateButton = new Button("Modifier");
+
+        updateButton.setOnAction(e -> {
+            try {
+                String nom = nomField.getText().trim();
+                String email = emailField.getText().trim();
+                double montantDonne = Double.parseDouble(montantDonneField.getText().trim());
+
+                if (nom.isEmpty() || email.isEmpty()) {
+                    showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
+                    return;
+                }
+
+                donateurService.updateDonateur(donateur.getId(), nom, email, montantDonne);
+                refreshDonateurTable();
+            } catch (NumberFormatException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
+            } catch (SQLException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur de la base de données", ex.getMessage());
+            }
+        });
+
+        VBox vbox = new VBox(10, new Label("Nom:"), nomField, new Label("Email:"), emailField, new Label("Montant Donné:"), montantDonneField, updateButton);
+        vbox.setPadding(new Insets(20));
+        vbox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #dddddd; -fx-border        .border-width: 1px;");
+        Scene dialogScene = new Scene(vbox, 300, 250);
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Modifier Donateur");
+        dialogStage.setScene(dialogScene);
+        dialogStage.show();
+    }
+
+    private void showAddBeneficiaireDialog() {
+        TextField nomField = new TextField();
+        TextField prenomField = new TextField();
+        TextField emailField = new TextField();
+        TextField telephoneField = new TextField();
+        TextField adresseField = new TextField();
+        Button addButton = new Button("Ajouter");
+
+        addButton.setOnAction(e -> {
+            String nom = nomField.getText().trim();
+            String prenom = prenomField.getText().trim();
+            String email = emailField.getText().trim();
+            String telephone = telephoneField.getText().trim();
+            String adresse = adresseField.getText().trim();
+
+            if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || telephone.isEmpty() || adresse.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
+                return;
+            }
+
+            beneficiaireService.addBeneficiaire(nom, prenom, email, telephone, adresse);
+            refreshBeneficiaireTable();
+        });
+
+        VBox vbox = new VBox(10, new Label("Nom:"), nomField, new Label("Prénom:"), prenomField, new Label("Email:"), emailField, new Label("Téléphone:"), telephoneField, new Label("Adresse:"), adresseField, addButton);
+        vbox.setPadding(new Insets(20));
+        vbox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #dddddd; -fx-border-width: 1px;");
+        Scene dialogScene = new Scene(vbox, 300, 300);
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Ajouter un Bénéficiaire");
+        dialogStage.setScene(dialogScene);
+        dialogStage.show();
+    }
+
+    private void showUpdateBeneficiaireDialog(Beneficiaire beneficiaire) {
+        TextField nomField = new TextField(beneficiaire.getNom());
+        TextField prenomField = new TextField(beneficiaire.getPrenom());
+        TextField emailField = new TextField(beneficiaire.getEmail());
+        TextField telephoneField = new TextField(beneficiaire.getTelephone());
+        TextField adresseField = new TextField(beneficiaire.getAdresse());
+        Button updateButton = new Button("Modifier");
+
+        updateButton.setOnAction(e -> {
+            String nom = nomField.getText();
+            String prenom = prenomField.getText();
+            String email = emailField.getText();
+            String telephone = telephoneField.getText();
+            String adresse = adresseField.getText();
+
+            if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || telephone.isEmpty() || adresse.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez remplir tous les champs obligatoires.");
+                return;
+            }
+
+            beneficiaireService.updateBeneficiaire(new Beneficiaire(beneficiaire.getId(), nom, prenom, email, telephone, adresse));
+            refreshBeneficiaireTable();
+        });
+
+        VBox vbox = new VBox(10, new Label("Nom:"), nomField, new Label("Prénom:"), prenomField, new Label("Email:"), emailField, new Label("Téléphone:"), telephoneField, new Label("Adresse:"), adresseField, updateButton);
+        vbox.setPadding(new Insets(20));
+        vbox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #dddddd; -fx-border-width: 1px;");
+        Scene dialogScene = new Scene(vbox, 300, 300);
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Modifier Bénéficiaire");
+        dialogStage.setScene(dialogScene);
+        dialogStage.show();
+    }
+
+    private void deleteBeneficiaire(Beneficiaire beneficiaire) {
+        beneficiaireService.deleteBeneficiaire(beneficiaire.getId());
+        refreshBeneficiaireTable();
+    }
+
+    private void handleAttribuerDon(Beneficiaire beneficiaire) {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Attribuer un Don");
+        dialog.setHeaderText("Attribuer un Don à " + beneficiaire.getNom());
+        dialog.setContentText("Montant du Don:");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            double montant = Double.parseDouble(result.get());
+            try {
+                double totalDons = donService.getTotalDons();
+                if (totalDons >= montant) {
+                    donBeneficiaireService.attribuerDon(1, beneficiaire.getId(), montant, LocalDate.now());
+                    donBeneficiaireService.enregistrerHistoriqueDon(1, beneficiaire.getId(), montant, LocalDate.now());
+                    donService.updateTotalDons(totalDons - montant);
+                    showAlert(Alert.AlertType.INFORMATION, "Succès", "Don attribué avec succès et enregistré dans l'historique des dons!");
+                } else {
+                    showAlert(Alert.AlertType.WARNING, "Fonds insuffisants", "Fonds insuffisants pour attribuer ce don.");
+                }
+            } catch (SQLException e) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de l'attribution du don.");
+            }
+        }
+    }
+    private void generateOperationReport(HistoriqueDon historiqueDon) {
+        System.out.println("Début de la génération du rapport pour l'ID du don: " + historiqueDon.getDonId());
+
+        // Création du document Word
+        XWPFDocument document = new XWPFDocument();
+
+        // Ajout de l'en-tête du rapport
+        XWPFParagraph header = document.createParagraph();
+        header.setAlignment(ParagraphAlignment.CENTER);
+        XWPFRun run = header.createRun();
+        run.setText("Association NAJD");
+        run.setBold(true);
+        run.setFontSize(16);
+        run.addBreak();
+
+        run = header.createRun();
+        run.setText("Adresse : Rue ZERKTOUNI, Marrakech, Maroc");
+        run.setFontSize(12);
+        run.addBreak();
+        run = header.createRun();
+        run.setText("0655554443");
+        run.setFontSize(12);
+        run.addBreak();
+        run.addBreak();
+
+        // Ajout du titre du rapport
+        XWPFParagraph title = document.createParagraph();
+        title.setAlignment(ParagraphAlignment.CENTER);
+        run = title.createRun();
+        run.setText("Rapport de l'Opération de Don");
+        run.setBold(true);
+        run.setFontSize(14);
+        run.addBreak();
+        run.addBreak();
+
+        // Ajout des détails de l'opération de don
+        XWPFParagraph paragraph = document.createParagraph();
+        run = paragraph.createRun();
+        run.setText("Détails de l'Opération:");
+        run.setBold(true);
+        run.setFontSize(12);
+        run.addBreak();
+
+        run = paragraph.createRun();
+        run.setText("ID du Don: " + historiqueDon.getDonId());
+        run.addBreak();
+
+        run.setText("Bénéficiaire: " + historiqueDon.getBeneficiaireNom());
+        run.addBreak();
+
+        run.setText("Date d'Attribution: " + historiqueDon.getDateAttribution());
+        run.addBreak();
+
+        run.setText("Montant: " + historiqueDon.getMontant());
+        run.addBreak();
+
+        // Chemin de sauvegarde du rapport dans le répertoire Téléchargements
+        String userHome = System.getProperty("user.home");
+        Path downloadPath = Paths.get(userHome, "Downloads");
+
+        // Vérifier et créer le répertoire Téléchargements s'il n'existe pas
+        // Vérifier et créer le répertoire Téléchargements s'il n'existe pas
+        if (!Files.exists(downloadPath)) {
+            try {
+                Files.createDirectories(downloadPath);
+            } catch (IOException e) {
+                e.printStackTrace();
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la création du répertoire Téléchargements.");
+                return;
+            }
+        }
 
 
+        String filePath = downloadPath.resolve("rapport_don_" + historiqueDon.getId() + ".docx").toString();
+        System.out.println("Chemin de sauvegarde du rapport: " + filePath);
 
+        // Sauvegarder le rapport dans un fichier
+        // Sauvegarder le rapport dans un fichier
+        try (FileOutputStream out = new FileOutputStream(filePath)) {
+            document.write(out);
+            System.out.println("Rapport généré et sauvegardé avec succès.");
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Rapport généré avec succès : " + filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la génération du rapport.");
+        }
+
+    }
+        private void handleLogout(Stage stage) {
+        LoginView loginView = new LoginView(stage);
+        stage.setScene(loginView.getScene());
+    }
+
+    private void showAlert(Alert.AlertType alertType, String title, String message) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 
 }
-
-

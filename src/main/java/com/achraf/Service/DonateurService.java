@@ -22,6 +22,14 @@ public class DonateurService {
         }
     }
 
+    public void deleteDonateur(int id) throws SQLException {
+        String query = "DELETE FROM donateurs WHERE id = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, id);
+            statement.executeUpdate();
+        }
+    }
 
     public List<Donateur> getDonateurs() {
         List<Donateur> donateurs = new ArrayList<>();
@@ -53,16 +61,7 @@ public class DonateurService {
         return null;
     }
 
-    public void deleteDonateur(int id) {
-        String query = "DELETE FROM donateurs WHERE id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, id);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+
 
     public void updateDonateur(int id, String nom, String email, double montantDonne) throws SQLException {
         String query = "UPDATE donateurs SET nom = ?, email = ?, montant_donne = ? WHERE id = ?";

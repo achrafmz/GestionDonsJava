@@ -1,28 +1,104 @@
+/* Boutons généraux */
 .button {
-    -fx-background-color: #5f9ea0;
+    -fx-background-color: #4caf50;
     -fx-text-fill: white;
     -fx-font-size: 14px;
     -fx-padding: 10px;
+    -fx-border-radius: 5px;
     -fx-background-radius: 5px;
 }
 
 .button:hover {
-    -fx-background-color: #4682b4;
+    -fx-background-color: #45a049;
 }
 
+/* Labels généraux */
 .label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+}
+
+/* Grande taille des labels */
+.label.large {
     -fx-font-size: 24px;
     -fx-text-fill: #ffffff;
 }
 
+/* Cartes */
 .card {
-    -fx-background-color: #32cd32;
-    -fx-background-radius: 10px;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dddddd;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
     -fx-padding: 20px;
+    -fx-box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
 }
 
+/* Labels des cartes */
+.card-label {
+    -fx-font-size: 24px;
+    -fx-text-fill: #333333;
+}
+
+/* Boutons spécifiques */
+.delete-button {
+    -fx-background-color: red;
+    -fx-text-fill: white;
+}
+
+.update-button {
+    -fx-background-color: orange;
+    -fx-text-fill: white;
+}
+
+.recu-button {
+    -fx-background-color: blue;
+    -fx-text-fill: white;
+}
+
+.attribuer-button {
+    -fx-background-color: green;
+    -fx-text-fill: white;
+}
+
+/* Table Views */
+.table-view {
+    -fx-background-color: #f9f9f9;
+    -fx-border-color: #dddddd;
+    -fx-border-width: 1px;
+}
+
+.table-view .column-header {
+    -fx-background-color: #e0e0e0;
+    -fx-text-fill: #333333;
+}
+
+.table-view .table-cell {
+    -fx-padding: 10px;
+    -fx-text-fill: #333333;
+}
+
+/* Sidebar */
 .sidebar {
     -fx-background-color: #2f4f4f;
     -fx-text-fill: white;
     -fx-padding: 10px;
+}
+
+/* Styles de l'application */
+.root {
+    -fx-font-family: 'Segoe UI', sans-serif;
+}
+
+/* Classes personnalisées */
+.my-class {
+    -fx-box-shadow: 10px 5px 5px 0px black;
+}
+
+.another-class {
+    -fx-box-shadow: 5px 10px 20px 0px rgba(0, 0, 0, 0.75);
+}
+
+.different-class {
+    -fx-box-shadow: 4px 4px 10px 0px rgba(0, 0, 0, 0.4);
 }

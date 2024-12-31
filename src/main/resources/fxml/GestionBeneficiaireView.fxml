@@ -3,6 +3,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javax.swing.table.TableColumn?>
 <VBox spacing="10" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.achraf.controllers.GestionBeneficiaireController">
     <TableView fx:id="beneficiaireTable">
         <columns>
