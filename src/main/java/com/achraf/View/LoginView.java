@@ -28,18 +28,18 @@ public class LoginView {
         // Créer les éléments de l'interface utilisateur
         Label titleLabel = new Label("Bienvenue au association NAJD");
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 30));
-        titleLabel.setTextFill(Color.web("#2E86C1"));
+        titleLabel.setTextFill(Color.web("#27ae60"));
 
         TextField usernameField = new TextField();
-        usernameField.setPromptText("Username");
-        usernameField.setStyle("-fx-font-size: 18px; -fx-padding: 10px; -fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #2E86C1;");
+        usernameField.setPromptText("Nom d'utilisateur");
+        usernameField.setStyle("-fx-font-size: 18px; -fx-padding: 10px; -fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #27ae60;");
 
         PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Password");
-        passwordField.setStyle("-fx-font-size: 18px; -fx-padding: 10px; -fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #2E86C1;");
+        passwordField.setPromptText("Mot de passe");
+        passwordField.setStyle("-fx-font-size: 18px; -fx-padding: 10px; -fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #27ae60;");
 
         Button loginButton = new Button("Connexion");
-        loginButton.setStyle("-fx-background-color: #2E86C1; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10px 20px; -fx-background-radius: 20;");
+        loginButton.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10px 20px; -fx-background-radius: 20;");
         loginButton.setOnAction(e -> {
             String username = usernameField.getText();
             String password = passwordField.getText();
@@ -73,7 +73,7 @@ public class LoginView {
         // Créer une boîte pour centrer le formulaire de connexion
         VBox root = new VBox(vbox);
         root.setAlignment(Pos.CENTER);
-        root.setStyle("-fx-background-color: #F0F4F8; -fx-padding: 50px;");
+        root.setStyle("-fx-background-color: #e8f5e9; -fx-padding: 50px;");
 
         // Configurer la scène et ajouter des actions
         scene = new Scene(root, 600, 400);

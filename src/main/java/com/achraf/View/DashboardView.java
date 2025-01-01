@@ -8,6 +8,10 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
+import javafx.scene.layout.*;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -174,7 +178,12 @@ public class DashboardView {
         return scene;
     }
 
+
+
+
+
     private VBox createSidebar(Stage stage) {
+        // Création des boutons
         Button dashboardButton = new Button("Tableau de Bord");
         Button adminButton = new Button("Gérer les Admins");
         Button donButton = new Button("Gérer les Dons");
@@ -183,6 +192,7 @@ public class DashboardView {
         Button historiqueButton = new Button("Voir l'Historique des Dons");
         Button logoutButton = new Button("Déconnecter");
 
+        // Ajout des actions des boutons
         dashboardButton.setOnAction(e -> mainPane.setCenter(cardBox));
         adminButton.setOnAction(e -> setMainPaneContent(adminTable, "Ajouter un Admin", this::showAddAdminDialog));
         donButton.setOnAction(e -> setMainPaneContent(donTable, "Ajouter un Don", this::showAddDonDialog));
@@ -191,12 +201,36 @@ public class DashboardView {
         historiqueButton.setOnAction(e -> mainPane.setCenter(historiqueTable));
         logoutButton.setOnAction(e -> handleLogout(stage));
 
-        VBox sidebar = new VBox(20, dashboardButton, adminButton, donButton, donateurButton, beneficiaireButton, historiqueButton, logoutButton);
-        sidebar.setAlignment(Pos.CENTER);
+        // Style commun pour tous les boutons
+        String buttonStyle = "-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px 20px; -fx-background-radius: 0; -fx-min-width: 200px;";
+        dashboardButton.setStyle(buttonStyle);
+        adminButton.setStyle(buttonStyle);
+        donButton.setStyle(buttonStyle);
+        donateurButton.setStyle(buttonStyle);
+        beneficiaireButton.setStyle(buttonStyle);
+        historiqueButton.setStyle(buttonStyle);
+        logoutButton.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px 20px; -fx-background-radius: 0; -fx-min-width: 200px;");
+
+        // Alignement et style de la barre latérale
+        VBox sidebar = new VBox(20, dashboardButton, adminButton, donButton, donateurButton, beneficiaireButton, historiqueButton);
+        sidebar.setAlignment(Pos.TOP_CENTER);
         sidebar.setPadding(new Insets(15));
-        sidebar.setStyle("-fx-background-color: #2F4F4F; -fx-text-fill: white;");
-        return sidebar;
+        sidebar.setStyle("-fx-background-color: #2F4F4F; -fx-text-fill: white; -fx-width: 200px;");
+
+        // Ajouter le bouton de déconnexion en bas
+        VBox bottomBox = new VBox(logoutButton);
+        bottomBox.setAlignment(Pos.BOTTOM_CENTER);
+        bottomBox.setPadding(new Insets(15));
+        VBox.setVgrow(bottomBox, Priority.ALWAYS); // S'assurer que le bouton de déconnexion reste en bas
+
+        // Conteneur principal de la barre latérale
+        VBox sidebarContainer = new VBox(sidebar, bottomBox);
+        sidebarContainer.setAlignment(Pos.TOP_LEFT);
+        sidebarContainer.setStyle("-fx-background-color: #2F4F4F; -fx-text-fill: white; -fx-width: 200px; -fx-height: 100%;");
+
+        return sidebarContainer;
     }
+
 
     private void setMainPaneContent(TableView<?> table, String buttonText, Runnable buttonAction) {
         refreshTable(table);

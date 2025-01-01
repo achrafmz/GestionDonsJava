@@ -1,0 +1,7 @@
+<?import java.awt.Label?>
+<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.achraf.controllers.DonSearchController">
+    <Label fx:id="labelId" layoutX="20" layoutY="20" text="ID : "/>
+    <Label fx:id="labelMontant" layoutX="20" layoutY="60" text="Montant : "/>
+    <Label fx:id="labelDateDon" layoutX="20" layoutY="100" text="Date du don : "/>
+    <Label fx:id="labelNomDonateur" layoutX="20" layoutY="140" text="Nom du donateur : "/>
+</AnchorPane>
