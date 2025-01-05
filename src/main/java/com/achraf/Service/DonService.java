@@ -63,7 +63,7 @@ public class DonService {
                     // Envoyer un email de remerciement avec le reçu en pièce jointe
                     Donateur donateur = donateurService.getDonateurById(donateurId);
                     String subject = "Merci pour votre don!";
-                    String body = "Cher " + donateur.getNom() + ",\n\nMerci beaucoup pour votre généreux don de " + montant + " EUR.\n\nVotre soutien est grandement apprécié!\n\nVous trouverez ci-joint le reçu de votre don.\n\nCordialement,\nL'Association";
+                    String body = "Cher " + donateur.getNom() + ",\n\nMerci beaucoup pour votre généreux don de " + montant + " MAD.\n\nVotre soutien est grandement apprécié!\n\nVous trouverez ci-joint le reçu de votre don.\n\nCordialement,\nL'Association najd";
                     String attachmentPath = generateRecuPDF(new Don(donId, donateurId, montant, dateDon));
                     if (attachmentPath != null) {
                         EmailUtil.sendEmailWithAttachment(donateur.getEmail(), subject, body, attachmentPath);

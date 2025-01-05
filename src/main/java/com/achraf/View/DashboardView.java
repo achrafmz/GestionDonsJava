@@ -12,7 +12,22 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 
+import org.apache.pdfbox.pdmodel.*;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import org.apache.poi.xwpf.usermodel.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -1038,6 +1053,8 @@ public class DashboardView {
 
 
 
+
+
     private String generateRecuPDF(Don don) {
         try {
             Donateur donateur = donateurService.getDonateurById(don.getDonateurId());
@@ -1048,42 +1065,86 @@ public class DashboardView {
 
             // Création du document PDF
             PDDocument document = new PDDocument();
-            PDPage page = new PDPage();
+            PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
 
             PDPageContentStream contentStream = new PDPageContentStream(document, page);
 
+            // Ajout du logo
+            try {
+                PDImageXObject pdImage = PDImageXObject.createFromFile("path/to/logo.png", document);
+                contentStream.drawImage(pdImage, 20, 750, 50, 50); // position x, y, width, height
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            // Ajout de l'en-tête
             contentStream.beginText();
-            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
-            contentStream.newLineAtOffset(25, 750);
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 20);
+            contentStream.newLineAtOffset(100, 770);
+            contentStream.showText("Association NAJD");
+            contentStream.endText();
+
+            contentStream.beginText();
+            contentStream.setFont(PDType1Font.HELVETICA, 12);
+            contentStream.newLineAtOffset(100, 750);
+            contentStream.showText("Adresse : Rue ZERKTOUNI, Marrakech, Maroc");
+            contentStream.endText();
+
+            contentStream.beginText();
+            contentStream.setFont(PDType1Font.HELVETICA, 12);
+            contentStream.newLineAtOffset(100, 735);
+            contentStream.showText("0655554443");
+            contentStream.endText();
+
+            // Ajout du titre
+            contentStream.beginText();
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 16);
+            contentStream.newLineAtOffset(25, 700);
             contentStream.showText("Reçu de Don");
             contentStream.endText();
 
+            // Ajout des détails du don
             contentStream.beginText();
-            contentStream.setFont(PDType1Font.HELVETICA, 12);
-            contentStream.newLineAtOffset(25, 725);
-            contentStream.showText("ID du Don: " + don.getId());
-            contentStream.endText();
-
-            contentStream.beginText();
-            contentStream.setFont(PDType1Font.HELVETICA, 12);
-            contentStream.newLineAtOffset(25, 700);
-            contentStream.showText("Nom du Donateur: " + donateur.getNom());
-            contentStream.endText();
-
-            contentStream.beginText();
-            contentStream.setFont(PDType1Font.HELVETICA, 12);
-            contentStream.newLineAtOffset(25, 675);
-            contentStream.showText("Montant: " + don.getMontant());
-            contentStream.endText();
-
-            contentStream.beginText();
-            contentStream.setFont(PDType1Font.HELVETICA, 12);
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
             contentStream.newLineAtOffset(25, 650);
-            contentStream.showText("Date de Don: " + don.getDateDon());
+            contentStream.showText("ID du Don:");
+            contentStream.setFont(PDType1Font.HELVETICA, 12);
+            contentStream.newLineAtOffset(100, 0);
+            contentStream.showText(String.valueOf(don.getId()));
             contentStream.endText();
 
+            contentStream.beginText();
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
+            contentStream.newLineAtOffset(25, 630);
+            contentStream.showText("Nom du Donateur:");
+            contentStream.setFont(PDType1Font.HELVETICA, 12);
+            contentStream.newLineAtOffset(140, 0);
+            contentStream.showText(donateur.getNom());
+            contentStream.endText();
+
+            contentStream.beginText();
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
+            contentStream.newLineAtOffset(25, 610);
+            contentStream.showText("Montant:");
+            contentStream.setFont(PDType1Font.HELVETICA, 12);
+            contentStream.newLineAtOffset(80, 0);
+            contentStream.showText(String.valueOf(don.getMontant()));
+            contentStream.endText();
+
+            contentStream.beginText();
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
+            contentStream.newLineAtOffset(25, 590);
+            contentStream.showText("Date de Don:");
+            contentStream.setFont(PDType1Font.HELVETICA, 12);
+            contentStream.newLineAtOffset(100, 0);
+            contentStream.showText(String.valueOf(don.getDateDon()));
+            contentStream.endText();
+
+            // Fermer le content stream
             contentStream.close();
+
+            // Sauvegarder le document PDF
             document.save(downloadPath.toString());
             document.close();
 
@@ -1094,6 +1155,8 @@ public class DashboardView {
             return null;
         }
     }
+
+
 
 
 
@@ -1132,26 +1195,29 @@ public class DashboardView {
         run.addBreak();
         run.addBreak();
 
-        // Ajout des détails de l'opération de don
-        XWPFParagraph paragraph = document.createParagraph();
-        run = paragraph.createRun();
-        run.setText("Détails de l'Opération:");
-        run.setBold(true);
-        run.setFontSize(12);
-        run.addBreak();
+        // Ajout des détails de l'opération de don sous forme de tableau
+        XWPFTable table = document.createTable();
+        table.setWidth("100%");
 
-        run = paragraph.createRun();
-        run.setText("ID du Don: " + historiqueDon.getDonId());
-        run.addBreak();
+        XWPFTableRow tableRowOne = table.getRow(0);
+        tableRowOne.getCell(0).setText("Détails de l'Opération:");
+        tableRowOne.addNewTableCell().setText("");
 
-        run.setText("Bénéficiaire: " + historiqueDon.getBeneficiaireNom());
-        run.addBreak();
+        XWPFTableRow tableRowTwo = table.createRow();
+        tableRowTwo.getCell(0).setText("ID du Don:");
+        tableRowTwo.getCell(1).setText(String.valueOf(historiqueDon.getDonId()));
 
-        run.setText("Date d'Attribution: " + historiqueDon.getDateAttribution());
-        run.addBreak();
+        XWPFTableRow tableRowThree = table.createRow();
+        tableRowThree.getCell(0).setText("Bénéficiaire:");
+        tableRowThree.getCell(1).setText(historiqueDon.getBeneficiaireNom());
 
-        run.setText("Montant: " + historiqueDon.getMontant());
-        run.addBreak();
+        XWPFTableRow tableRowFour = table.createRow();
+        tableRowFour.getCell(0).setText("Date d'Attribution:");
+        tableRowFour.getCell(1).setText(String.valueOf(historiqueDon.getDateAttribution()));
+
+        XWPFTableRow tableRowFive = table.createRow();
+        tableRowFive.getCell(0).setText("Montant:");
+        tableRowFive.getCell(1).setText(String.valueOf(historiqueDon.getMontant()));
 
         // Chemin de sauvegarde du rapport dans le répertoire Téléchargements
         String userHome = System.getProperty("user.home");
@@ -1181,7 +1247,9 @@ public class DashboardView {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la génération du rapport.");
         }
 
+        System.out.println("Fin de la génération du rapport pour l'ID du don: " + historiqueDon.getDonId());
     }
+
 
     private void handleLogout(Stage stage) {
         LoginView loginView = new LoginView(stage);
