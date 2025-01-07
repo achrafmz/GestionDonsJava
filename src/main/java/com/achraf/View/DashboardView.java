@@ -121,35 +121,35 @@ public class DashboardView {
 
         sidebar = createSidebar(stage);
         cardBox = createDashboardCards();
-        VBox statisticsTable = createStatisticsTable();
-        LineChart<Number, Number> donationsChart = createDonationsChart();
 
-        HBox mainContent = new HBox(20, cardBox, statisticsTable);
-        VBox contentWithChart = new VBox(10, mainContent, donationsChart);
+        // Rafraîchir et afficher le tableau de bord à l'ouverture de l'application
+        refreshDashboard();
 
-        mainPane.setLeft(sidebar);
-        mainPane.setCenter(contentWithChart);
+        mainPane.setLeft(sidebar);  // Assurer que la sidebar est bien ajoutée au mainPane
 
         scene = new Scene(mainPane, 1200, 800);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.show();
-
-        // Rafraîchissement automatique toutes les 10 secondes
-        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(10), event -> {
-            try {
-                refreshDashboard();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }));
-        timeline.setCycleCount(Animation.INDEFINITE);
-        timeline.play();
-
-        // Rafraîchir le tableau de bord au démarrage
-        refreshDashboard();
     }
+
+
+    private void refreshDashboard() throws SQLException {
+        // Rafraîchir les cartes du tableau de bord
+        refreshDashboardCards();
+
+        // Rafraîchir les statistiques
+        VBox statisticsTable = createStatisticsTable();
+        LineChart<Number, Number> donationsChart = createDonationsChart();
+
+        HBox mainContent = new HBox(20, cardBox, statisticsTable);
+        VBox contentWithChart = new VBox(10, mainContent, donationsChart);
+
+        mainPane.setCenter(contentWithChart);
+    }
+
+
 
 
 
@@ -189,19 +189,6 @@ public class DashboardView {
         donsSum.setText(String.valueOf(totalDons));
     }
 
-    private void refreshDashboard() throws SQLException {
-        // Rafraîchir les cartes du tableau de bord
-        refreshDashboardCards();
-
-        // Rafraîchir les statistiques
-        VBox statisticsTable = createStatisticsTable();
-        LineChart<Number, Number> donationsChart = createDonationsChart();
-
-        HBox mainContent = new HBox(20, cardBox, statisticsTable);
-        VBox contentWithChart = new VBox(10, mainContent, donationsChart);
-
-        mainPane.setCenter(contentWithChart);
-    }
 
 
 
@@ -271,6 +258,9 @@ public class DashboardView {
 
 
 
+
+
+
     private void setMainPaneContent(TableView<?> table, String buttonText, Runnable buttonAction) {
         refreshTable(table);
         Button addButton = new Button(buttonText);
@@ -280,6 +270,7 @@ public class DashboardView {
         vbox.setPadding(new Insets(10));
         mainPane.setCenter(vbox);
     }
+
 
     private void refreshTable(TableView<?> table) {
         if (table == adminTable) {
