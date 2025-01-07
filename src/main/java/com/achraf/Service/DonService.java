@@ -18,10 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DonService {
-    private DonateurService donateurService;
+    private com.achraf.services.DonateurService donateurService;
 
     public DonService() {
-        this.donateurService = new DonateurService();
+        this.donateurService = new com.achraf.services.DonateurService();
     }
 
     public List<Don> getDonsByDonateurId(int donateurId) throws SQLException {

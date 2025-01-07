@@ -139,14 +139,18 @@ public class DashboardView {
         // Rafraîchissement automatique toutes les 10 secondes
         Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(10), event -> {
             try {
-                refreshDashboardCards();
+                refreshDashboard();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }));
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
+
+        // Rafraîchir le tableau de bord au démarrage
+        refreshDashboard();
     }
+
 
 
     private LineChart<Number, Number> createDonationsChart() throws SQLException {
@@ -185,6 +189,19 @@ public class DashboardView {
         donsSum.setText(String.valueOf(totalDons));
     }
 
+    private void refreshDashboard() throws SQLException {
+        // Rafraîchir les cartes du tableau de bord
+        refreshDashboardCards();
+
+        // Rafraîchir les statistiques
+        VBox statisticsTable = createStatisticsTable();
+        LineChart<Number, Number> donationsChart = createDonationsChart();
+
+        HBox mainContent = new HBox(20, cardBox, statisticsTable);
+        VBox contentWithChart = new VBox(10, mainContent, donationsChart);
+
+        mainPane.setCenter(contentWithChart);
+    }
 
 
 
@@ -208,7 +225,13 @@ public class DashboardView {
         Button logoutButton = new Button("Déconnecter");
 
         // Ajout des actions des boutons
-        dashboardButton.setOnAction(e -> mainPane.setCenter(cardBox));
+        dashboardButton.setOnAction(e -> {
+            try {
+                refreshDashboard();
+            } catch (SQLException ex) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du rafraîchissement du tableau de bord.");
+            }
+        });
         adminButton.setOnAction(e -> setMainPaneContent(adminTable, "Ajouter un Admin", this::showAddAdminDialog));
         donButton.setOnAction(e -> setMainPaneContent(donTable, "Ajouter un Don", this::showAddDonDialog));
         donateurButton.setOnAction(e -> setMainPaneContent(donateurTable, "Ajouter un Donateur", this::showAddDonateurDialog));
@@ -245,6 +268,7 @@ public class DashboardView {
 
         return sidebarContainer;
     }
+
 
 
     private void setMainPaneContent(TableView<?> table, String buttonText, Runnable buttonAction) {
@@ -784,8 +808,19 @@ public class DashboardView {
 
                 double montant = Double.parseDouble(montantField.getText().trim());
 
+                // Ajouter le don
                 donService.addDon(selectedDonateur.getId(), montant);
+
+                // Mettre à jour le montant total des dons
+                double totalDons = donService.getTotalDons();
+                totalDons += montant;
+                donService.updateTotalDons(totalDons);
+
+                // Rafraîchir les données de la table et mettre à jour le total des dons affiché
                 refreshDonTable();
+                updateTotalDons();
+
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Don ajouté avec succès !");
             } catch (NumberFormatException ex) {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Veuillez entrer une valeur valide pour le montant.");
             } catch (SQLException ex) {
@@ -802,6 +837,16 @@ public class DashboardView {
         dialogStage.setScene(dialogScene);
         dialogStage.show();
     }
+    private void updateTotalDons() {
+        try {
+            double totalDons = donService.getTotalDons();
+            Label donsSum = (Label) ((VBox) cardBox.getChildren().get(1)).getChildren().get(1);
+            donsSum.setText(totalDons + " DH");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void showUpdateDonDialog(Don don) {
         ComboBox<Donateur> donateurComboBox = new ComboBox<>();
@@ -1263,4 +1308,5 @@ public class DashboardView {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
 }

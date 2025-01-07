@@ -8,18 +8,17 @@ import javax.activation.*;
 public class EmailUtil {
 
     public static void sendEmail(String toAddress, String subject, String body) {
-        final String fromAddress = "achrafmazouz50@gmail.com"; // Votre email
-        final String password = "ixsh wuza babp fico"; // Votre mot de passe
+        final String fromAddress = "achrafmazouz50@gmail.com";
+        final String password = "ixsh wuza babp fico";
 
-        // Paramètres SMTP pour Gmail
+
         Properties properties = new Properties();
         properties.put("mail.smtp.host", "smtp.gmail.com");
         properties.put("mail.smtp.port", "587");
         properties.put("mail.smtp.auth", "true");
         properties.put("mail.smtp.starttls.enable", "true");
 
-        // Authentification
-        Session session = Session.getInstance(properties, new Authenticator() {
+         Session session = Session.getInstance(properties, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(fromAddress, password);
@@ -44,15 +43,13 @@ public class EmailUtil {
         final String fromAddress = "achrafmazouz50@gmail.com"; // Votre email
         final String password = "ixsh wuza babp fico"; // Votre mot de passe
 
-        // Paramètres SMTP pour Gmail
-        Properties properties = new Properties();
+         Properties properties = new Properties();
         properties.put("mail.smtp.host", "smtp.gmail.com");
         properties.put("mail.smtp.port", "587");
         properties.put("mail.smtp.auth", "true");
         properties.put("mail.smtp.starttls.enable", "true");
 
-        // Authentification
-        Session session = Session.getInstance(properties, new Authenticator() {
+         Session session = Session.getInstance(properties, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(fromAddress, password);
